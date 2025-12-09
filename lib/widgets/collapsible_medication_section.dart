@@ -8,6 +8,7 @@ class CollapsibleMedicationSection extends StatefulWidget {
   final Function(MedicationItem) onMarkAsTaken;
   final Function(BuildContext, String, String, String, VoidCallback) onShowDeleteDialog;
   final bool showMarkButton;
+  final bool showMarkInMenu;
 
   const CollapsibleMedicationSection({
     super.key,
@@ -16,6 +17,7 @@ class CollapsibleMedicationSection extends StatefulWidget {
     required this.onMarkAsTaken,
     required this.onShowDeleteDialog,
     this.showMarkButton = true,
+    this.showMarkInMenu = false,
   });
 
   @override
@@ -68,6 +70,7 @@ class _CollapsibleMedicationSectionState extends State<CollapsibleMedicationSect
                         onMarkAsTaken: () => widget.onMarkAsTaken(med),
                         onShowDeleteDialog: widget.onShowDeleteDialog,
                         showMarkButton: widget.showMarkButton,
+                        showMarkInMenu: widget.showMarkInMenu,
                       ),
                     ))
                 .toList(),

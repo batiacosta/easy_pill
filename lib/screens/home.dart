@@ -182,6 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                         onShowDeleteDialog: _showDeleteDialog,
                         showMarkButton: true,
+                        showMarkInMenu: true,
                       ),
                       // Today - Scheduled Section (medications scheduled for later today)
                       MedicationSection(
@@ -211,6 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                         onShowDeleteDialog: _showDeleteDialog,
                         showMarkButton: false,
+                        showMarkInMenu: true,
                       ),
                       // Tomorrow - Collapsible Section
                       CollapsibleMedicationSection(

@@ -6,6 +6,7 @@ class MedicationCard extends StatefulWidget {
   final VoidCallback onMarkAsTaken;
   final Function(BuildContext, String, String, String, VoidCallback) onShowDeleteDialog;
   final bool showMarkButton;
+  final bool showMarkInMenu;
 
   const MedicationCard({
     super.key,
@@ -13,6 +14,7 @@ class MedicationCard extends StatefulWidget {
     required this.onMarkAsTaken,
     required this.onShowDeleteDialog,
     this.showMarkButton = true,
+    this.showMarkInMenu = false,
   });
 
   @override
@@ -95,7 +97,9 @@ class _MedicationCardState extends State<MedicationCard> {
                         color: Color(0xFF828282), size: 24),
                     color: const Color(0xFF2C2C2E),
                     onSelected: (value) {
-                      if (value == 'delete') {
+                      if (value == 'mark_taken') {
+                        widget.onMarkAsTaken();
+                      } else if (value == 'delete') {
                         widget.onShowDeleteDialog(
                           context,
                           widget.medication.name,
@@ -131,42 +135,69 @@ class _MedicationCardState extends State<MedicationCard> {
                         );
                       }
                     },
-                    itemBuilder: (BuildContext context) => [
-                      PopupMenuItem<String>(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            const Icon(Icons.delete_outline,
-                                color: Color(0xFFEB5757), size: 20),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Skip Dose',
-                              style: TextStyle(
-                                color: Color(0xFFEB5757),
-                                fontSize: 14,
-                              ),
+                    itemBuilder: (BuildContext context) {
+                      final items = <PopupMenuItem<String>>[];
+                      
+                      if (widget.showMarkInMenu && !widget.medication.isTaken) {
+                        items.add(
+                          PopupMenuItem<String>(
+                            value: 'mark_taken',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.check_circle,
+                                    color: Color(0xFFE0E0E0), size: 20),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Mark as Taken',
+                                  style: TextStyle(
+                                    color: Color(0xFFE0E0E0),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'delete_all',
-                        child: Row(
-                          children: [
-                            const Icon(Icons.delete_sweep,
-                                color: Color(0xFFEB5757), size: 20),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Remove Medication',
-                              style: TextStyle(
-                                color: Color(0xFFEB5757),
-                                fontSize: 14,
+                          ),
+                        );
+                      }
+                      
+                      items.addAll([
+                        PopupMenuItem<String>(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.delete_outline,
+                                  color: Color(0xFFEB5757), size: 20),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Skip Dose',
+                                style: TextStyle(
+                                  color: Color(0xFFEB5757),
+                                  fontSize: 14,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                        PopupMenuItem<String>(
+                          value: 'delete_all',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.delete_sweep,
+                                  color: Color(0xFFEB5757), size: 20),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Remove Medication',
+                                style: TextStyle(
+                                  color: Color(0xFFEB5757),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ]);
+                      return items;
+                    },
                   ),
                 ],
               ),
