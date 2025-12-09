@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/medication_item.dart';
 import '../widgets/medication_section.dart';
 import '../widgets/collapsible_medication_section.dart';
+import '../providers/localization_provider.dart';
+import '../l10n/app_strings.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,15 +25,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _updateGreeting() {
+    final localization =
+        Provider.of<LocalizationProvider>(context, listen: false);
     final hour = DateTime.now().hour;
     final now = DateTime.now();
 
     if (hour < 12) {
-      greeting = 'Good Morning';
+      greeting = localization.getString('good_morning');
     } else if (hour < 18) {
-      greeting = 'Good Afternoon';
+      greeting = localization.getString('good_afternoon');
     } else {
-      greeting = 'Good Evening';
+      greeting = localization.getString('good_evening');
     }
 
     currentDate = DateFormat('MMMM d').format(now);
@@ -43,6 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
     String message,
     VoidCallback onConfirm,
   ) {
+    final localization =
+        Provider.of<LocalizationProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -68,9 +75,9 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
+              child: Text(
+                localization.getString('cancel'),
+                style: const TextStyle(
                   color: Color(0xFF9B51E0),
                   fontSize: 16,
                 ),
@@ -81,9 +88,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.of(context).pop();
                 onConfirm();
               },
-              child: const Text(
-                'Delete',
-                style: TextStyle(
+              child: Text(
+                localization.getString('delete'),
+                style: const TextStyle(
                   color: Color(0xFFEB5757),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -138,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       // Date
                       Text(
-                        'Today, $currentDate',
+                        '${context.read<LocalizationProvider>().getString('today')}, $currentDate',
                         style: const TextStyle(
                           color: Color(0xFFE0E0E0),
                           fontSize: 28,
@@ -156,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // Today - Pending Section (medications that need to be taken)
                       MedicationSection(
-                        title: 'Today - Pending',
+                        title: context.read<LocalizationProvider>().getString('today_pending'),
                         medications: [
                           MedicationItem(
                             name: 'Ibuprofen 200mg',
@@ -186,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       // Today - Scheduled Section (medications scheduled for later today)
                       MedicationSection(
-                        title: 'Today - Scheduled',
+                        title: context.read<LocalizationProvider>().getString('today_scheduled'),
                         medications: [
                           MedicationItem(
                             name: 'Allergy Relief',
@@ -216,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       // Tomorrow - Collapsible Section
                       CollapsibleMedicationSection(
-                        title: 'Tomorrow',
+                        title: context.read<LocalizationProvider>().getString('tomorrow'),
                         medications: [
                           MedicationItem(
                             name: 'Aspirin 500mg',

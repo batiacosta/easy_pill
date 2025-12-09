@@ -1,0 +1,21 @@
+{
+  "good_morning": "Buenos Días",
+  "good_afternoon": "Buenas Tardes",
+  "good_evening": "Buenas Noches",
+  "today": "Hoy",
+  "tomorrow": "Mañana",
+  "today_pending": "Hoy - Pendiente",
+  "today_scheduled": "Hoy - Programado",
+  "mark_as_taken": "Marcar como Tomado",
+  "taken": "Tomado",
+  "skip_dose": "Saltar Dosis",
+  "remove_medication": "Eliminar Medicamento",
+  "skip_dose_confirmation": "¿Estás seguro de que deseas saltar esta dosis programada?",
+  "remove_medication_confirmation": "¿Eliminar todas las dosis programadas de {medication}? Esta acción no se puede deshacer.",
+  "skipped": "Saltada {medication}",
+  "removed_all_doses": "Todas las dosis programadas de {medication} han sido eliminadas",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "notifications": "Notificaciones",
+  "add_medication": "Agregar Medicamento"
+}

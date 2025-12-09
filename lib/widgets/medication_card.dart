@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/medication_item.dart';
+import '../providers/localization_provider.dart';
 
 class MedicationCard extends StatefulWidget {
   final MedicationItem medication;
@@ -136,6 +138,8 @@ class _MedicationCardState extends State<MedicationCard> {
                       }
                     },
                     itemBuilder: (BuildContext context) {
+                      final localization =
+                          context.read<LocalizationProvider>();
                       final items = <PopupMenuItem<String>>[];
                       
                       if (widget.showMarkInMenu && !widget.medication.isTaken) {
@@ -147,9 +151,9 @@ class _MedicationCardState extends State<MedicationCard> {
                                 const Icon(Icons.check_circle,
                                     color: Color(0xFFE0E0E0), size: 20),
                                 const SizedBox(width: 12),
-                                const Text(
-                                  'Mark as Taken',
-                                  style: TextStyle(
+                                Text(
+                                  localization.getString('mark_as_taken'),
+                                  style: const TextStyle(
                                     color: Color(0xFFE0E0E0),
                                     fontSize: 14,
                                   ),
@@ -168,9 +172,9 @@ class _MedicationCardState extends State<MedicationCard> {
                               const Icon(Icons.delete_outline,
                                   color: Color(0xFFEB5757), size: 20),
                               const SizedBox(width: 12),
-                              const Text(
-                                'Skip Dose',
-                                style: TextStyle(
+                              Text(
+                                localization.getString('skip_dose'),
+                                style: const TextStyle(
                                   color: Color(0xFFEB5757),
                                   fontSize: 14,
                                 ),
@@ -185,9 +189,9 @@ class _MedicationCardState extends State<MedicationCard> {
                               const Icon(Icons.delete_sweep,
                                   color: Color(0xFFEB5757), size: 20),
                               const SizedBox(width: 12),
-                              const Text(
-                                'Remove Medication',
-                                style: TextStyle(
+                              Text(
+                                localization.getString('remove_medication'),
+                                style: const TextStyle(
                                   color: Color(0xFFEB5757),
                                   fontSize: 14,
                                 ),
@@ -221,9 +225,9 @@ class _MedicationCardState extends State<MedicationCard> {
                           ),
                           icon: const Icon(Icons.check_circle,
                               size: 20, color: Color(0xFF828282)),
-                          label: const Text(
-                            'Taken',
-                            style: TextStyle(
+                          label: Text(
+                            context.read<LocalizationProvider>().getString('taken'),
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
@@ -239,9 +243,9 @@ class _MedicationCardState extends State<MedicationCard> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Mark as Taken',
-                            style: TextStyle(
+                          child: Text(
+                            context.read<LocalizationProvider>().getString('mark_as_taken'),
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
