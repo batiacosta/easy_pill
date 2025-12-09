@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/medication_item.dart';
 import '../widgets/medication_section.dart';
+import '../widgets/collapsible_medication_section.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -153,9 +154,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Morning Section
+                      // Today - Pending Section (medications that need to be taken)
                       MedicationSection(
-                        title: 'Pending',
+                        title: 'Today - Pending',
                         medications: [
                           MedicationItem(
                             name: 'Ibuprofen 200mg',
@@ -180,10 +181,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           });
                         },
                         onShowDeleteDialog: _showDeleteDialog,
+                        showMarkButton: true,
                       ),
-                      // Afternoon Section
+                      // Today - Scheduled Section (medications scheduled for later today)
                       MedicationSection(
-                        title: 'Afternoon',
+                        title: 'Today - Scheduled',
                         medications: [
                           MedicationItem(
                             name: 'Allergy Relief',
@@ -193,18 +195,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             bgColor: const Color(0x1A2D9CDB),
                             isTaken: false,
                           ),
-                        ],
-                        onMarkAsTaken: (medication) {
-                          setState(() {
-                            medication.isTaken = true;
-                          });
-                        },
-                        onShowDeleteDialog: _showDeleteDialog,
-                      ),
-                      // Evening Section
-                      MedicationSection(
-                        title: 'Evening',
-                        medications: [
                           MedicationItem(
                             name: 'Magnesium 400mg',
                             time: 'Next dose: 9:00 PM',
@@ -220,6 +210,36 @@ class _HomeScreenState extends State<HomeScreen> {
                           });
                         },
                         onShowDeleteDialog: _showDeleteDialog,
+                        showMarkButton: false,
+                      ),
+                      // Tomorrow - Collapsible Section
+                      CollapsibleMedicationSection(
+                        title: 'Tomorrow',
+                        medications: [
+                          MedicationItem(
+                            name: 'Aspirin 500mg',
+                            time: '8:00 AM',
+                            icon: Icons.medication,
+                            color: const Color(0xFFEB5757),
+                            bgColor: const Color(0x1AEB5757),
+                            isTaken: false,
+                          ),
+                          MedicationItem(
+                            name: 'Vitamin C 1000mg',
+                            time: '12:00 PM',
+                            icon: Icons.healing,
+                            color: const Color(0xFF2D9CDB),
+                            bgColor: const Color(0x1A2D9CDB),
+                            isTaken: false,
+                          ),
+                        ],
+                        onMarkAsTaken: (medication) {
+                          setState(() {
+                            medication.isTaken = true;
+                          });
+                        },
+                        onShowDeleteDialog: _showDeleteDialog,
+                        showMarkButton: false,
                       ),
                     ],
                   ),

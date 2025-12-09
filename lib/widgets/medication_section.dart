@@ -7,6 +7,7 @@ class MedicationSection extends StatelessWidget {
   final List<MedicationItem> medications;
   final Function(MedicationItem) onMarkAsTaken;
   final Function(BuildContext, String, String, String, VoidCallback) onShowDeleteDialog;
+  final bool showMarkButton;
 
   const MedicationSection({
     super.key,
@@ -14,6 +15,7 @@ class MedicationSection extends StatelessWidget {
     required this.medications,
     required this.onMarkAsTaken,
     required this.onShowDeleteDialog,
+    this.showMarkButton = true,
   });
 
   @override
@@ -40,6 +42,7 @@ class MedicationSection extends StatelessWidget {
                       medication: med,
                       onMarkAsTaken: () => onMarkAsTaken(med),
                       onShowDeleteDialog: onShowDeleteDialog,
+                      showMarkButton: showMarkButton,
                     ),
                   ))
               .toList(),

@@ -5,12 +5,14 @@ class MedicationCard extends StatefulWidget {
   final MedicationItem medication;
   final VoidCallback onMarkAsTaken;
   final Function(BuildContext, String, String, String, VoidCallback) onShowDeleteDialog;
+  final bool showMarkButton;
 
   const MedicationCard({
     super.key,
     required this.medication,
     required this.onMarkAsTaken,
     required this.onShowDeleteDialog,
+    this.showMarkButton = true,
   });
 
   @override
@@ -170,51 +172,52 @@ class _MedicationCardState extends State<MedicationCard> {
               ),
             ),
             // Action Button
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                child: widget.medication.isTaken
-                    ? ElevatedButton.icon(
-                        onPressed: null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2C2C2E),
-                          disabledForegroundColor: const Color(0xFF828282),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+            if (widget.showMarkButton)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: widget.medication.isTaken
+                      ? ElevatedButton.icon(
+                          onPressed: null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2C2C2E),
+                            disabledForegroundColor: const Color(0xFF828282),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          icon: const Icon(Icons.check_circle,
+                              size: 20, color: Color(0xFF828282)),
+                          label: const Text(
+                            'Taken',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        )
+                      : ElevatedButton(
+                          onPressed: widget.onMarkAsTaken,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: widget.medication.color,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Mark as Taken',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                        icon: const Icon(Icons.check_circle,
-                            size: 20, color: Color(0xFF828282)),
-                        label: const Text(
-                          'Taken',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      )
-                    : ElevatedButton(
-                        onPressed: widget.onMarkAsTaken,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: widget.medication.color,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Mark as Taken',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
+                ),
               ),
-            ),
           ],
         ),
       ),
