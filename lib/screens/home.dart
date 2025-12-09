@@ -33,6 +33,66 @@ class _HomeScreenState extends State<HomeScreen> {
     currentDate = DateFormat('MMMM d').format(now);
   }
 
+  void _showDeleteDialog(
+    BuildContext context,
+    String medicationName,
+    String title,
+    String message,
+    VoidCallback onConfirm,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFFE0E0E0),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(
+              color: Color(0xFF828282),
+              fontSize: 16,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Color(0xFF9B51E0),
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                onConfirm();
+              },
+              child: const Text(
+                'Delete',
+                style: TextStyle(
+                  color: Color(0xFFEB5757),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -266,10 +326,85 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   // More Options Button
-                  IconButton(
+                  PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert,
                         color: Color(0xFF828282), size: 24),
-                    onPressed: () {},
+                    color: const Color(0xFF2C2C2E),
+                    onSelected: (value) {
+                      if (value == 'delete') {
+                        _showDeleteDialog(
+                          context,
+                          medication.name,
+                          'Delete Dose',
+                          'Are you sure you want to delete this scheduled dose?',
+                          () {
+                            // Handle delete single dose
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Deleted ${medication.name}',
+                                ),
+                                backgroundColor: const Color(0xFFEB5757),
+                              ),
+                            );
+                          },
+                        );
+                      } else if (value == 'delete_all') {
+                        _showDeleteDialog(
+                          context,
+                          medication.name,
+                          'Delete All Scheduled',
+                          'Delete all scheduled doses of ${medication.name}? This action cannot be undone.',
+                          () {
+                            // Handle delete all scheduled doses
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Deleted all scheduled doses of ${medication.name}',
+                                ),
+                                backgroundColor: const Color(0xFFEB5757),
+                              ),
+                            );
+                          },
+                        );
+                      }
+                    },
+                    itemBuilder: (BuildContext context) => [
+                      PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.delete_outline,
+                                color: Color(0xFFEB5757), size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Skip Dose',
+                              style: TextStyle(
+                                color: const Color(0xFFEB5757),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'delete_all',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.delete_sweep,
+                                color: Color(0xFFEB5757), size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Remove Medication',
+                              style: TextStyle(
+                                color: const Color(0xFFEB5757),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
