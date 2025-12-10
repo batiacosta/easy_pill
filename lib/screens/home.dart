@@ -3,7 +3,9 @@ import 'package:intl/intl.dart';
 import '../models/medication_item.dart';
 import '../widgets/medication_section.dart';
 import '../widgets/collapsible_medication_section.dart';
+import '../widgets/add_medication_modal.dart' show AddMedicationModal, ScheduleType;
 import '../extensions/localization_extension.dart';
+import '../services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,12 +22,83 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     currentDate = DateFormat('MMMM d').format(DateTime.now());
+    _initializeNotifications();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _updateGreeting();
+  }
+
+  Future<void> _initializeNotifications() async {
+    final notificationService = NotificationService();
+    await notificationService.initialize();
+    await notificationService.requestPermissions();
+  }
+
+  Future<void> _showAddMedicationModal() async {
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const AddMedicationModal(),
+    );
+
+    if (result != null) {
+      // Schedule notifications based on the result
+      final notificationService = NotificationService();
+      final int medicationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+      switch (result['scheduleType']) {
+        case ScheduleType.everyHours:
+          await notificationService.scheduleEveryHours(
+            id: medicationId,
+            medicationName: result['name'],
+            hours: result['interval'],
+            dosing: result['dosing'],
+            totalDoses: result['pillCount'],
+          );
+          break;
+        case ScheduleType.fixedHours:
+          await notificationService.scheduleFixedHours(
+            id: medicationId,
+            medicationName: result['name'],
+            times: result['fixedTimes'],
+            dosing: result['dosing'],
+            totalDoses: result['pillCount'],
+          );
+          break;
+        case ScheduleType.everyDays:
+          await notificationService.scheduleEveryDays(
+            id: medicationId,
+            medicationName: result['name'],
+            days: result['interval'],
+            times: result['fixedTimes'],
+            dosing: result['dosing'],
+            totalDoses: result['pillCount'],
+          );
+          break;
+      }
+
+      if (mounted) {
+        // Show pending notifications count for debugging
+        final pending = await NotificationService().getPendingNotifications();
+        debugPrint('Pending notifications: ${pending.length}');
+        for (var notif in pending) {
+          debugPrint('  - ID: ${notif.id}, Title: ${notif.title}, Body: ${notif.body}');
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${result['name']} added successfully (${pending.length} reminders scheduled)',
+            ),
+            backgroundColor: const Color(0xFF9B51E0),
+          ),
+        );
+      }
+    }
   }
 
   void _updateGreeting() {
@@ -135,7 +208,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             IconButton(
                               icon: const Icon(Icons.notifications_outlined,
                                   color: Color(0xFFE0E0E0), size: 28),
-                              onPressed: () {},
+                              onPressed: () async {
+                                // Test notification - will fire in 5 seconds
+                                await NotificationService().scheduleTestNotification();
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Test notification scheduled for 5 seconds from now'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              },
                             ),
                           ],
                         ),
@@ -259,7 +343,7 @@ class _HomeScreenState extends State<HomeScreen> {
             bottom: 24,
             right: 24,
             child: FloatingActionButton.extended(
-              onPressed: () {},
+              onPressed: _showAddMedicationModal,
               elevation: 8,
               backgroundColor: const Color(0xFF9B51E0),
               shape: RoundedRectangleBorder(

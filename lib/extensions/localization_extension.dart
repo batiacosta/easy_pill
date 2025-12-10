@@ -3,8 +3,13 @@ import 'package:provider/provider.dart';
 import '../providers/localization_provider.dart';
 
 extension LocalizationExtension on BuildContext {
-  // Simple shorthand: context.tr('key')
+  // Use in build methods (will rebuild on language change)
   String tr(String key, [Map<String, String>? params]) {
     return watch<LocalizationProvider>().tr(key, params);
+  }
+
+  // Use in event handlers like onPressed, callbacks, etc. (won't rebuild)
+  String trStatic(String key, [Map<String, String>? params]) {
+    return read<LocalizationProvider>().tr(key, params);
   }
 }
