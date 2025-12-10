@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/medication_item.dart';
-import '../widgets/medication_section.dart';
-import '../widgets/collapsible_medication_section.dart';
-import '../widgets/add_medication_modal.dart' show AddMedicationModal, ScheduleType;
+import 'package:provider/provider.dart';
+import '../models/medication.dart';
+import '../widgets/add_medication_modal.dart';
 import '../extensions/localization_extension.dart';
 import '../services/notification_service.dart';
+import '../providers/medication_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     currentDate = DateFormat('MMMM d').format(DateTime.now());
-    _initializeNotifications();
+    _initializeApp();
   }
 
   @override
@@ -31,73 +31,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _updateGreeting();
   }
 
-  Future<void> _initializeNotifications() async {
+  Future<void> _initializeApp() async {
     final notificationService = NotificationService();
     await notificationService.initialize();
     await notificationService.requestPermissions();
-  }
-
-  Future<void> _showAddMedicationModal() async {
-    final result = await showModalBottomSheet<Map<String, dynamic>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const AddMedicationModal(),
-    );
-
-    if (result != null) {
-      // Schedule notifications based on the result
-      final notificationService = NotificationService();
-      final int medicationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-
-      switch (result['scheduleType']) {
-        case ScheduleType.everyHours:
-          await notificationService.scheduleEveryHours(
-            id: medicationId,
-            medicationName: result['name'],
-            hours: result['interval'],
-            dosing: result['dosing'],
-            totalDoses: result['pillCount'],
-          );
-          break;
-        case ScheduleType.fixedHours:
-          await notificationService.scheduleFixedHours(
-            id: medicationId,
-            medicationName: result['name'],
-            times: result['fixedTimes'],
-            dosing: result['dosing'],
-            totalDoses: result['pillCount'],
-          );
-          break;
-        case ScheduleType.everyDays:
-          await notificationService.scheduleEveryDays(
-            id: medicationId,
-            medicationName: result['name'],
-            days: result['interval'],
-            times: result['fixedTimes'],
-            dosing: result['dosing'],
-            totalDoses: result['pillCount'],
-          );
-          break;
-      }
-
-      if (mounted) {
-        // Show pending notifications count for debugging
-        final pending = await NotificationService().getPendingNotifications();
-        debugPrint('Pending notifications: ${pending.length}');
-        for (var notif in pending) {
-          debugPrint('  - ID: ${notif.id}, Title: ${notif.title}, Body: ${notif.body}');
-        }
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${result['name']} added successfully (${pending.length} reminders scheduled)',
-            ),
-            backgroundColor: const Color(0xFF9B51E0),
-          ),
-        );
-      }
+    
+    // Load medications from database
+    if (mounted) {
+      await context.read<MedicationProvider>().loadMedications();
     }
   }
 
@@ -173,6 +114,53 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _showAddMedicationModal() async {
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const AddMedicationModal(),
+    );
+
+    if (result != null && mounted) {
+      try {
+        // Create medication from result
+        final medication = Medication(
+          name: result['name'],
+          dosing: result['dosing'],
+          pillCount: result['pillCount'],
+          description: result['description'],
+          scheduleType: result['scheduleType'],
+          interval: result['interval'],
+          fixedTimes: result['fixedTimes'],
+          notificationId: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        );
+
+        // Add through provider
+        await context.read<MedicationProvider>().addMedication(medication);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${result['name']} added successfully'),
+              backgroundColor: const Color(0xFF9B51E0),
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('Error adding medication: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error adding medication'),
+              backgroundColor: Color(0xFFEB5757),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -180,182 +168,577 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Header
-                  Container(
-                    color: const Color(0xFF121212),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Greeting and Notification
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Consumer<MedicationProvider>(
+              builder: (context, medicationProvider, _) {
+                if (medicationProvider.isLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF9B51E0),
+                    ),
+                  );
+                }
+
+                final medications = medicationProvider.medications;
+                final todayCounts = medicationProvider.todayDoseCounts;
+
+                final pendingToday = medications
+                    .where((m) => _isDueToday(m) && (todayCounts[m.id] ?? 0) == 0)
+                    .toList();
+                final takenToday = medications
+                    .where((m) => _isDueToday(m) && (todayCounts[m.id] ?? 0) > 0)
+                    .toList();
+
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Header
+                      Container(
+                        color: const Color(0xFF121212),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '$greeting, Alex',
-                              style: const TextStyle(
-                                color: Color(0xFFE0E0E0),
-                                fontSize: 16,
-                                fontWeight: FontWeight.normal,
+                            // Greeting and Notification
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '$greeting, Alex',
+                                    style: const TextStyle(
+                                      color: Color(0xFFE0E0E0),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                        Icons.notifications_outlined,
+                                        color: Color(0xFFE0E0E0),
+                                        size: 28),
+                                    onPressed: () async {
+                                      // Test notification
+                                      await NotificationService()
+                                          .scheduleTestNotification();
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                                'Test notification scheduled for 5 seconds from now'),
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.notifications_outlined,
-                                  color: Color(0xFFE0E0E0), size: 28),
-                              onPressed: () async {
-                                // Test notification - will fire in 5 seconds
-                                await NotificationService().scheduleTestNotification();
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Test notification scheduled for 5 seconds from now'),
-                                      duration: Duration(seconds: 2),
-                                    ),
-                                  );
-                                }
-                              },
+                            // Date
+                            Text(
+                              '${context.tr('today')}, $currentDate',
+                              style: const TextStyle(
+                                color: Color(0xFFE0E0E0),
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      // Date
-                      Text(
-                        '${context.tr('today')}, $currentDate',
-                        style: const TextStyle(
-                          color: Color(0xFFE0E0E0),
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                      // Main Content
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (medications.isEmpty)
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(32),
+                                  child: Column(
+                                    children: [
+                                      const Icon(
+                                        Icons.medication,
+                                        size: 64,
+                                        color: Color(0xFF828282),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      const Text(
+                                        'No medications yet',
+                                        style: TextStyle(
+                                          color: Color(0xFF828282),
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      const Text(
+                                        'Tap the + button to add your first medication',
+                                        style: TextStyle(
+                                          color: Color(0xFF828282),
+                                          fontSize: 14,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else
+                              Column(
+                                children: [
+                                  // Pending today
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      'Today',
+                                      style: const TextStyle(
+                                        color: Color(0xFFE0E0E0),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  if (pendingToday.isEmpty)
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1E1E1E),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: const Color(0xFF2C2C2C),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'All caught up for today!',
+                                        style: TextStyle(
+                                          color: Color(0xFF828282),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    for (final med in pendingToday)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 12),
+                                        child: _buildMedicationCard(
+                                          context,
+                                          med,
+                                          medicationProvider,
+                                          takenToday: false,
+                                          dueToday: true,
+                                        ),
+                                      ),
+
+                                  const SizedBox(height: 16),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      'Taken Today',
+                                      style: const TextStyle(
+                                        color: Color(0xFFE0E0E0),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  if (takenToday.isEmpty)
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1E1E1E),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: const Color(0xFF2C2C2C),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Nothing marked as taken yet.',
+                                        style: TextStyle(
+                                          color: Color(0xFF828282),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    for (final med in takenToday)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 12),
+                                        child: _buildMedicationCard(
+                                          context,
+                                          med,
+                                          medicationProvider,
+                                          takenToday: true,
+                                          dueToday: true,
+                                        ),
+                                      ),
+                                ],
+                              ),
+                            const SizedBox(height: 120),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ),
-                // Main Content
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Today - Pending Section (medications that need to be taken)
-                      MedicationSection(
-                        title: context.tr('today_pending'),
-                        medications: [
-                          MedicationItem(
-                            name: 'Ibuprofen 200mg',
-                            time: 'Next dose: 8:00 AM',
-                            icon: Icons.medication,
-                            color: const Color(0xFFEB5757),
-                            bgColor: const Color(0x1AEB5757),
-                            isTaken: false,
-                          ),
-                          MedicationItem(
-                            name: 'Vitamin D 1000IU',
-                            time: 'Taken at 8:05 AM',
-                            icon: Icons.medication,
-                            color: const Color(0xFF828282),
-                            bgColor: const Color(0x1A828282),
-                            isTaken: true,
-                          ),
-                        ],
-                        onMarkAsTaken: (medication) {
-                          setState(() {
-                            medication.isTaken = true;
-                          });
-                        },
-                        onShowDeleteDialog: _showDeleteDialog,
-                        showMarkButton: true,
-                        showMarkInMenu: true,
-                      ),
-                      // Today - Scheduled Section (medications scheduled for later today)
-                      MedicationSection(
-                        title: context.tr('today_scheduled'),
-                        medications: [
-                          MedicationItem(
-                            name: 'Allergy Relief',
-                            time: 'Next dose: 1:00 PM',
-                            icon: Icons.healing,
-                            color: const Color(0xFF2D9CDB),
-                            bgColor: const Color(0x1A2D9CDB),
-                            isTaken: false,
-                          ),
-                          MedicationItem(
-                            name: 'Magnesium 400mg',
-                            time: 'Next dose: 9:00 PM',
-                            icon: Icons.water_drop,
-                            color: const Color(0xFF9B51E0),
-                            bgColor: const Color(0x1A9B51E0),
-                            isTaken: false,
-                          ),
-                        ],
-                        onMarkAsTaken: (medication) {
-                          setState(() {
-                            medication.isTaken = true;
-                          });
-                        },
-                        onShowDeleteDialog: _showDeleteDialog,
-                        showMarkButton: false,
-                        showMarkInMenu: true,
-                      ),
-                      // Tomorrow - Collapsible Section
-                      CollapsibleMedicationSection(
-                        title: context.tr('tomorrow'),
-                        medications: [
-                          MedicationItem(
-                            name: 'Aspirin 500mg',
-                            time: '8:00 AM',
-                            icon: Icons.medication,
-                            color: const Color(0xFFEB5757),
-                            bgColor: const Color(0x1AEB5757),
-                            isTaken: false,
-                          ),
-                          MedicationItem(
-                            name: 'Vitamin C 1000mg',
-                            time: '12:00 PM',
-                            icon: Icons.healing,
-                            color: const Color(0xFF2D9CDB),
-                            bgColor: const Color(0x1A2D9CDB),
-                            isTaken: false,
-                          ),
-                        ],
-                        onMarkAsTaken: (medication) {
-                          setState(() {
-                            medication.isTaken = true;
-                          });
-                        },
-                        onShowDeleteDialog: _showDeleteDialog,
-                        showMarkButton: false,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 120),
-              ],
+                );
+              },
             ),
-          ),
-          // Floating Action Button
-          Positioned(
-            bottom: 24,
-            right: 24,
-            child: FloatingActionButton.extended(
-              onPressed: _showAddMedicationModal,
-              elevation: 8,
-              backgroundColor: const Color(0xFF9B51E0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            // Floating Action Button
+            Positioned(
+              bottom: 24,
+              right: 24,
+              child: FloatingActionButton.extended(
+                onPressed: _showAddMedicationModal,
+                elevation: 8,
+                backgroundColor: const Color(0xFF9B51E0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                icon: const Icon(Icons.add, size: 32),
+                label: const SizedBox.shrink(),
               ),
-              icon: const Icon(Icons.add, size: 32),
-              label: const SizedBox.shrink(),
             ),
-          ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMedicationCard(
+    BuildContext context,
+    Medication medication,
+    MedicationProvider provider,
+    {required bool takenToday, required bool dueToday}
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF2C2C2C),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        medication.name,
+                        style: const TextStyle(
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (medication.dosing != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          medication.dosing!,
+                          style: const TextStyle(
+                            color: Color(0xFF828282),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.more_vert,
+                      color: Color(0xFF828282), size: 24),
+                  onPressed: () => _showMedicationOptions(
+                    context,
+                    medication,
+                    provider,
+                  ),
+                ),
+              ],
+            ),
+            if (medication.description != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                medication.description!,
+                style: const TextStyle(
+                  color: Color(0xFF828282),
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: 12),
+            // Schedule info
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2C2C2E),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.schedule, color: Color(0xFF9B51E0), size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _getScheduleText(medication),
+                      style: const TextStyle(
+                        color: Color(0xFFE0E0E0),
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Action button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: (!dueToday || takenToday)
+                    ? null
+                    : () => provider.recordDoseTaken(medication.id!),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      takenToday ? const Color(0xFF2D9CDB) : const Color(0xFF9B51E0),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFF2C2C2C),
+                  disabledForegroundColor: const Color(0xFF828282),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                icon: Icon(
+                  takenToday
+                      ? Icons.check_circle
+                      : dueToday
+                          ? Icons.check_circle_outline
+                          : Icons.lock_clock,
+                  size: 20,
+                ),
+                label: Text(
+                  takenToday
+                      ? 'Taken today'
+                      : dueToday
+                          ? context.tr('mark_as_taken')
+                          : 'Not due today',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getScheduleText(Medication medication) {
+    switch (medication.scheduleType) {
+      case ScheduleType.everyHours:
+        return 'Every ${medication.interval} hours';
+      case ScheduleType.fixedHours:
+        final times = medication.fixedTimes
+                ?.map((t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}')
+                .join(', ') ??
+            '';
+        return 'Daily at $times';
+      case ScheduleType.everyDays:
+        final times = medication.fixedTimes
+                ?.map((t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}')
+                .join(', ') ??
+            '';
+        return 'Every ${medication.interval} days at $times';
+    }
+  }
+
+  bool _isDueToday(Medication medication) {
+    switch (medication.scheduleType) {
+      case ScheduleType.everyHours:
+        return true;
+      case ScheduleType.fixedHours:
+        return true;
+      case ScheduleType.everyDays:
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final start = DateTime(medication.createdAt.year, medication.createdAt.month, medication.createdAt.day);
+        final diffDays = today.difference(start).inDays;
+        final interval = medication.interval ?? 1;
+        return diffDays >= 0 && diffDays % interval == 0;
+    }
+  }
+
+  void _showMedicationOptions(
+    BuildContext context,
+    Medication medication,
+    MedicationProvider provider,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              medication.name,
+              style: const TextStyle(
+                color: Color(0xFFE0E0E0),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Mark as Taken
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline, color: Color(0xFF9B51E0)),
+              title: Text(
+                context.trStatic('mark_as_taken'),
+                style: const TextStyle(color: Color(0xFF9B51E0)),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                provider.recordDoseTaken(medication.id!);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${medication.name} marked as taken'),
+                    backgroundColor: const Color(0xFF9B51E0),
+                  ),
+                );
+              },
+            ),
+            const Divider(color: Color(0xFF2C2C2C), height: 8),
+            // Skip Dose
+            ListTile(
+              leading: const Icon(Icons.skip_next, color: Color(0xFF2D9CDB)),
+              title: Text(
+                context.trStatic('skip_dose'),
+                style: const TextStyle(color: Color(0xFF2D9CDB)),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showSkipDoseDialog(context, medication);
+              },
+            ),
+            const Divider(color: Color(0xFF2C2C2C), height: 8),
+            // Remove Medication
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Color(0xFFEB5757)),
+              title: Text(
+                context.trStatic('remove_medication'),
+                style: const TextStyle(color: Color(0xFFEB5757)),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteDialog(
+                  context,
+                  medication.name,
+                  context.trStatic('remove_medication'),
+                  'Remove ${medication.name} and all its scheduled doses?',
+                  () {
+                    provider.deleteMedication(medication.id!);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${medication.name} removed'),
+                        backgroundColor: const Color(0xFFEB5757),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSkipDoseDialog(BuildContext context, Medication medication) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: Text(
+            context.trStatic('skip_dose'),
+            style: const TextStyle(
+              color: Color(0xFFE0E0E0),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            'Skip this dose of ${medication.name}?',
+            style: const TextStyle(
+              color: Color(0xFF828282),
+              fontSize: 16,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                context.trStatic('cancel'),
+                style: const TextStyle(
+                  color: Color(0xFF9B51E0),
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${medication.name} dose skipped'),
+                    backgroundColor: const Color(0xFF2D9CDB),
+                  ),
+                );
+              },
+              child: Text(
+                context.trStatic('skip_dose'),
+                style: const TextStyle(
+                  color: Color(0xFF2D9CDB),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

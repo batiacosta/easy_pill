@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../extensions/localization_extension.dart';
-
-enum ScheduleType { everyHours, fixedHours, everyDays }
+import '../models/medication.dart';
 
 class AddMedicationModal extends StatefulWidget {
   const AddMedicationModal({super.key});
@@ -72,22 +71,27 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
   }
 
   void _saveMedication() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Save medication and schedule notifications
-      Navigator.pop(context, {
-        'name': _nameController.text,
-        'dosing': _dosingController.text,
-        'pillCount': _hasLimit ? int.tryParse(_pillCountController.text) : null,
-        'description': _descriptionController.text,
-        'scheduleType': _scheduleType,
-        'interval': _scheduleType != ScheduleType.fixedHours 
-            ? int.parse(_intervalController.text) 
-            : null,
-        'fixedTimes': _scheduleType == ScheduleType.fixedHours 
-            ? _fixedTimes 
-            : null,
-      });
-    }
+    if (!_formKey.currentState!.validate()) return;
+
+    // Parse interval only for the schedule types that require it
+    final int? interval =
+        _scheduleType == ScheduleType.fixedHours ? null : int.parse(_intervalController.text);
+
+    // Choose fixed times only when applicable
+    final List<TimeOfDay>? times =
+        _scheduleType == ScheduleType.everyHours ? null : List<TimeOfDay>.from(_fixedTimes);
+
+    Navigator.pop(context, {
+      'name': _nameController.text.trim(),
+      'dosing': _dosingController.text.trim().isEmpty ? null : _dosingController.text.trim(),
+      'pillCount': _hasLimit ? int.tryParse(_pillCountController.text) : null,
+      'description': _descriptionController.text.trim().isEmpty
+          ? null
+          : _descriptionController.text.trim(),
+      'scheduleType': _scheduleType,
+      'interval': interval,
+      'fixedTimes': times,
+    });
   }
 
   @override
@@ -156,7 +160,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return context.tr('required_field');
+                            return context.trStatic('required_field');
                         }
                         return null;
                       },
@@ -233,10 +237,10 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                         ),
                         validator: (value) {
                           if (_hasLimit && (value == null || value.isEmpty)) {
-                            return context.tr('required_field');
+                            return context.trStatic('required_field');
                           }
                           if (_hasLimit && int.tryParse(value!) == null) {
-                            return context.tr('invalid_number');
+                            return context.trStatic('invalid_number');
                           }
                           return null;
                         },
@@ -307,10 +311,10 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                 validator: (value) {
                                   if (_scheduleType == ScheduleType.everyHours &&
                                       (value == null || value.isEmpty)) {
-                                    return context.tr('required');
+                                    return context.trStatic('required');
                                   }
                                   if (int.tryParse(value!) == null) {
-                                    return context.tr('invalid');
+                                    return context.trStatic('invalid');
                                   }
                                   return null;
                                 },
@@ -469,6 +473,16 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                         vertical: 12,
                                       ),
                                     ),
+                                    validator: (value) {
+                                      if (_scheduleType == ScheduleType.everyDays &&
+                                          (value == null || value.isEmpty)) {
+                                        return context.trStatic('required');
+                                      }
+                                      if (int.tryParse(value!) == null) {
+                                        return context.trStatic('invalid');
+                                      }
+                                      return null;
+                                    },
                                   ),
                                 ),
                                 const SizedBox(width: 8),

@@ -89,27 +89,45 @@ class NotificationService {
     String? dosing,
     int? totalDoses,
   }) async {
+    if (hours <= 0) {
+      debugPrint('scheduleEveryHours skipped: interval must be > 0');
+      return;
+    }
+
     await cancelNotification(id);
 
     final now = DateTime.now();
     var nextDose = DateTime(now.year, now.month, now.day, now.hour);
 
-    // Schedule notifications for the next month or until totalDoses reached
+    // Schedule notifications for the next 30 days
     int doseCount = 0;
-    final maxDoses = totalDoses ?? 100; // Default to 100 if unlimited
+    final thirtyDaysFromNow = now.add(const Duration(days: 30));
+    
+    // If totalDoses is set, schedule up to that amount, otherwise schedule for 30 days
+    int notificationId = id;
+    int scheduledCount = 0;
 
-    while (doseCount < maxDoses && doseCount < 100) {
+    while (nextDose.isBefore(thirtyDaysFromNow)) {
       nextDose = nextDose.add(Duration(hours: hours));
 
-      await _scheduleNotification(
-        id: id + doseCount,
-        title: 'Time to take your medication',
-        body: _buildNotificationBody(medicationName, dosing),
-        scheduledDate: nextDose,
-      );
+      if (nextDose.isBefore(thirtyDaysFromNow)) {
+        // Check if we've reached the dose limit
+        if (totalDoses != null && doseCount >= totalDoses) {
+          break;
+        }
 
-      doseCount++;
+        await _scheduleNotification(
+          id: notificationId++,
+          title: 'Time to take your medication',
+          body: _buildNotificationBody(medicationName, dosing),
+          scheduledDate: nextDose,
+        );
+        doseCount++;
+        scheduledCount++;
+      }
     }
+    
+    debugPrint('Scheduled $scheduledCount notifications for every $hours hours');
   }
 
   Future<void> scheduleFixedHours({
@@ -119,6 +137,11 @@ class NotificationService {
     String? dosing,
     int? totalDoses,
   }) async {
+    if (times.isEmpty) {
+      debugPrint('scheduleFixedHours skipped: no times provided');
+      return;
+    }
+
     await cancelNotification(id);
 
     final now = DateTime.now();
@@ -129,15 +152,28 @@ class NotificationService {
     debugPrint('Times: ${times.map((t) => '${t.hour}:${t.minute}').join(', ')}');
     debugPrint('Current time: $now');
 
-    // Calculate total days needed
+    // Calculate notifications for 30 days
+    final thirtyDaysFromNow = now.add(const Duration(days: 30));
     final dosesPerDay = times.length;
     final daysNeeded = totalDoses != null ? (totalDoses / dosesPerDay).ceil() : 30;
 
     int scheduledCount = 0;
+    int doseCount = 0;
+
     for (int day = 0; day < daysNeeded && day < 30; day++) {
       final targetDate = now.add(Duration(days: day));
 
+      // Stop if we've exceeded 30 days
+      if (targetDate.isAfter(thirtyDaysFromNow)) {
+        break;
+      }
+
       for (final time in times) {
+        // Stop if we've reached total dose limit
+        if (totalDoses != null && doseCount >= totalDoses) {
+          break;
+        }
+
         var scheduledDate = DateTime(
           targetDate.year,
           targetDate.month,
@@ -155,6 +191,7 @@ class NotificationService {
             scheduledDate: scheduledDate,
           );
           scheduledCount++;
+          doseCount++;
         }
       }
     }
@@ -170,19 +207,42 @@ class NotificationService {
     String? dosing,
     int? totalDoses,
   }) async {
+    if (days <= 0) {
+      debugPrint('scheduleEveryDays skipped: interval days must be > 0');
+      return;
+    }
+    if (times.isEmpty) {
+      debugPrint('scheduleEveryDays skipped: no times provided');
+      return;
+    }
+
     await cancelNotification(id);
 
     final now = DateTime.now();
     int notificationId = id;
 
-    // Calculate cycles needed
+    // Calculate cycles for 30 days
+    final thirtyDaysFromNow = now.add(const Duration(days: 30));
     final dosesPerCycle = times.length;
-    final cyclesNeeded = totalDoses != null ? (totalDoses / dosesPerCycle).ceil() : 30;
+    final cyclesNeeded = totalDoses != null ? (totalDoses / dosesPerCycle).ceil() : (30 / days).ceil();
 
-    for (int cycle = 0; cycle < cyclesNeeded && cycle < 30; cycle++) {
+    int scheduledCount = 0;
+    int doseCount = 0;
+
+    for (int cycle = 0; cycle < cyclesNeeded; cycle++) {
       final targetDate = now.add(Duration(days: days * cycle));
 
+      // Stop if we've exceeded 30 days
+      if (targetDate.isAfter(thirtyDaysFromNow)) {
+        break;
+      }
+
       for (final time in times) {
+        // Stop if we've reached total dose limit
+        if (totalDoses != null && doseCount >= totalDoses) {
+          break;
+        }
+
         var scheduledDate = DateTime(
           targetDate.year,
           targetDate.month,
@@ -199,9 +259,13 @@ class NotificationService {
             body: _buildNotificationBody(medicationName, dosing),
             scheduledDate: scheduledDate,
           );
+          scheduledCount++;
+          doseCount++;
         }
       }
     }
+    
+    debugPrint('Scheduled $scheduledCount notifications for every $days days at ${times.length} times per day');
   }
 
   Future<void> _scheduleNotification({
