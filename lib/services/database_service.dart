@@ -23,7 +23,7 @@ class DatabaseService {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -40,6 +40,7 @@ class DatabaseService {
         schedule_type INTEGER NOT NULL,
         interval INTEGER,
         fixed_times TEXT,
+        start_time TEXT,
         created_at TEXT NOT NULL,
         notification_id INTEGER NOT NULL,
         is_active INTEGER DEFAULT 1
@@ -83,6 +84,11 @@ class DatabaseService {
             FOREIGN KEY(medication_id) REFERENCES medications(id) ON DELETE CASCADE
           )
         ''');
+      }
+      
+      // Add start_time column if upgrading to version 3
+      if (oldVersion < 3) {
+        await db.execute('ALTER TABLE medications ADD COLUMN start_time TEXT');
       }
     }
   }

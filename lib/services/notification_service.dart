@@ -88,6 +88,7 @@ class NotificationService {
     required int hours,
     String? dosing,
     int? totalDoses,
+    TimeOfDay? startTime,
   }) async {
     if (hours <= 0) {
       debugPrint('scheduleEveryHours skipped: interval must be > 0');
@@ -97,7 +98,21 @@ class NotificationService {
     await cancelNotification(id);
 
     final now = DateTime.now();
-    var nextDose = DateTime(now.year, now.month, now.day, now.hour);
+    
+    // Calculate first dose time based on startTime or current hour
+    DateTime nextDose;
+    if (startTime != null) {
+      // Use the specified start time for today or tomorrow if already past
+      var candidateTime = DateTime(now.year, now.month, now.day, startTime.hour, startTime.minute);
+      if (candidateTime.isBefore(now)) {
+        // If start time has already passed today, start from tomorrow
+        candidateTime = candidateTime.add(const Duration(days: 1));
+      }
+      nextDose = candidateTime;
+    } else {
+      // Default: use current hour (existing behavior)
+      nextDose = DateTime(now.year, now.month, now.day, now.hour);
+    }
 
     // Schedule notifications for the next 30 days
     int doseCount = 0;

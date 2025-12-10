@@ -11,6 +11,7 @@ class Medication {
   final ScheduleType scheduleType;
   final int? interval; // hours for everyHours, days for everyDays
   final List<TimeOfDay>? fixedTimes; // for fixedHours and everyDays
+  final TimeOfDay? startTime; // for everyHours schedule
   final DateTime createdAt;
   final int notificationId; // Base ID for scheduling notifications
 
@@ -23,6 +24,7 @@ class Medication {
     required this.scheduleType,
     this.interval,
     this.fixedTimes,
+    this.startTime,
     required this.notificationId,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
@@ -38,6 +40,7 @@ class Medication {
       'schedule_type': scheduleType.index,
       'interval': interval,
       'fixed_times': _encodeFixedTimes(fixedTimes),
+      'start_time': _encodeTimeOfDay(startTime),
       'created_at': createdAt.toIso8601String(),
       'notification_id': notificationId,
     };
@@ -54,6 +57,7 @@ class Medication {
       scheduleType: ScheduleType.values[map['schedule_type']],
       interval: map['interval'],
       fixedTimes: _decodeFixedTimes(map['fixed_times']),
+      startTime: _decodeTimeOfDay(map['start_time']),
       notificationId: map['notification_id'],
       createdAt: DateTime.parse(map['created_at']),
     );
@@ -72,6 +76,17 @@ class Medication {
     }).toList();
   }
 
+  static String? _encodeTimeOfDay(TimeOfDay? time) {
+    if (time == null) return null;
+    return '${time.hour}:${time.minute}';
+  }
+
+  static TimeOfDay? _decodeTimeOfDay(String? encoded) {
+    if (encoded == null || encoded.isEmpty) return null;
+    final parts = encoded.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
   Medication copyWith({
     int? id,
     String? name,
@@ -81,6 +96,7 @@ class Medication {
     ScheduleType? scheduleType,
     int? interval,
     List<TimeOfDay>? fixedTimes,
+    TimeOfDay? startTime,
     DateTime? createdAt,
     int? notificationId,
   }) {
@@ -93,6 +109,7 @@ class Medication {
       scheduleType: scheduleType ?? this.scheduleType,
       interval: interval ?? this.interval,
       fixedTimes: fixedTimes ?? this.fixedTimes,
+      startTime: startTime ?? this.startTime,
       createdAt: createdAt ?? this.createdAt,
       notificationId: notificationId ?? this.notificationId,
     );

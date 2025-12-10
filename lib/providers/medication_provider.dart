@@ -49,7 +49,22 @@ class MedicationProvider with ChangeNotifier {
     switch (medication.scheduleType) {
       case ScheduleType.everyHours:
         if (medication.interval == null) break;
-        var nextDose = DateTime(start.year, start.month, start.day, start.hour);
+        
+        // Calculate first dose time based on startTime or current hour
+        DateTime nextDose;
+        if (medication.startTime != null) {
+          // Use the specified start time
+          var candidateTime = DateTime(start.year, start.month, start.day, medication.startTime!.hour, medication.startTime!.minute);
+          // If we're calculating from tomorrow onwards, we need to find the first occurrence
+          if (candidateTime.isBefore(start)) {
+            candidateTime = candidateTime.add(const Duration(days: 1));
+          }
+          nextDose = candidateTime;
+        } else {
+          // Default: use start hour
+          nextDose = DateTime(start.year, start.month, start.day, start.hour);
+        }
+        
         int doseCount = 0;
         
         while (nextDose.isBefore(end)) {
@@ -239,6 +254,7 @@ class MedicationProvider with ChangeNotifier {
             hours: medication.interval!,
             dosing: medication.dosing,
             totalDoses: medication.pillCount,
+            startTime: medication.startTime,
           );
           break;
         case ScheduleType.fixedHours:
@@ -303,6 +319,29 @@ class MedicationProvider with ChangeNotifier {
       return await _dbService.getTodaysDoseCount(medicationId);
     } catch (e) {
       debugPrint('Error getting today dose count: $e');
+      rethrow;
+    }
+  }
+
+  // Update medication
+  Future<void> updateMedication(Medication medication) async {
+    try {
+      // Update in database
+      await _dbService.updateMedication(medication);
+      
+      // Update in local list
+      final index = _medications.indexWhere((m) => m.id == medication.id);
+      if (index != -1) {
+        _medications[index] = medication;
+        
+        // Reschedule notifications
+        await _rescheduleNotificationsForMedication(medication);
+        
+        notifyListeners();
+        debugPrint('Medication updated: ${medication.name}');
+      }
+    } catch (e) {
+      debugPrint('Error updating medication: $e');
       rethrow;
     }
   }

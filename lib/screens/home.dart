@@ -134,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
           scheduleType: result['scheduleType'],
           interval: result['interval'],
           fixedTimes: result['fixedTimes'],
+          startTime: result['startTime'],
           notificationId: DateTime.now().millisecondsSinceEpoch ~/ 1000,
         );
 
@@ -158,6 +159,61 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         }
+      }
+    }
+  }
+
+  Future<void> _showEditMedicationModal(
+    BuildContext context,
+    Medication medication,
+    MedicationProvider provider,
+  ) async {
+    // Capture scaffold before showing modal
+    final scaffold = ScaffoldMessenger.of(context);
+    
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AddMedicationModal(medicationToEdit: medication),
+    );
+
+    if (result != null && mounted) {
+      try {
+        final medName = result['name'];
+        
+        // Update medication with result
+        final updatedMedication = Medication(
+          id: medication.id,
+          name: result['name'],
+          dosing: result['dosing'],
+          pillCount: result['pillCount'],
+          description: result['description'],
+          scheduleType: result['scheduleType'],
+          interval: result['interval'],
+          fixedTimes: result['fixedTimes'],
+          startTime: result['startTime'],
+          notificationId: medication.notificationId,
+          createdAt: medication.createdAt,
+        );
+
+        // Update through provider
+        await provider.updateMedication(updatedMedication);
+
+        scaffold.showSnackBar(
+          SnackBar(
+            content: Text('$medName updated successfully'),
+            backgroundColor: const Color(0xFF9B51E0),
+          ),
+        );
+      } catch (e) {
+        debugPrint('Error updating medication: $e');
+        scaffold.showSnackBar(
+          const SnackBar(
+            content: Text('Error updating medication'),
+            backgroundColor: Color(0xFFEB5757),
+          ),
+        );
       }
     }
   }
@@ -685,6 +741,19 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             const Divider(color: Color(0xFF2C2C2C), height: 8),
+            // Edit Medication
+            ListTile(
+              leading: const Icon(Icons.edit_outlined, color: Color(0xFF2D9CDB)),
+              title: const Text(
+                'Edit Medication',
+                style: TextStyle(color: Color(0xFF2D9CDB)),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showEditMedicationModal(context, medication, provider);
+              },
+            ),
+            const Divider(color: Color(0xFF2C2C2C), height: 8),
             // Skip Dose
             ListTile(
               leading: const Icon(Icons.skip_next, color: Color(0xFF2D9CDB)),
@@ -935,6 +1004,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     backgroundColor: const Color(0xFF9B51E0),
                   ),
                 );
+              },
+            ),
+            const Divider(color: Color(0xFF2C2C2C), height: 8),
+            // Edit Medication
+            ListTile(
+              leading: const Icon(Icons.edit_outlined, color: Color(0xFF2D9CDB)),
+              title: const Text(
+                'Edit Medication',
+                style: TextStyle(color: Color(0xFF2D9CDB)),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showEditMedicationModal(context, dose.medication, provider);
               },
             ),
             const Divider(color: Color(0xFF2C2C2C), height: 8),

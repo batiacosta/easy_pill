@@ -3,7 +3,9 @@ import '../extensions/localization_extension.dart';
 import '../models/medication.dart';
 
 class AddMedicationModal extends StatefulWidget {
-  const AddMedicationModal({super.key});
+  final Medication? medicationToEdit;
+
+  const AddMedicationModal({super.key, this.medicationToEdit});
 
   @override
   State<AddMedicationModal> createState() => _AddMedicationModalState();
@@ -19,7 +21,38 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
   
   ScheduleType _scheduleType = ScheduleType.everyHours;
   List<TimeOfDay> _fixedTimes = [TimeOfDay.now()];
+  TimeOfDay? _startTime;
   bool _hasLimit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // If editing, populate fields with existing medication data
+    if (widget.medicationToEdit != null) {
+      final med = widget.medicationToEdit!;
+      _nameController.text = med.name;
+      _dosingController.text = med.dosing ?? '';
+      _descriptionController.text = med.description ?? '';
+      _scheduleType = med.scheduleType;
+      
+      if (med.interval != null) {
+        _intervalController.text = med.interval!.toString();
+      }
+      
+      if (med.pillCount != null) {
+        _hasLimit = true;
+        _pillCountController.text = med.pillCount!.toString();
+      }
+      
+      if (med.fixedTimes != null && med.fixedTimes!.isNotEmpty) {
+        _fixedTimes = List<TimeOfDay>.from(med.fixedTimes!);
+      }
+      
+      if (med.startTime != null) {
+        _startTime = med.startTime;
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -70,6 +103,31 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
     }
   }
 
+  Future<void> _selectStartTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _startTime ?? TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF9B51E0),
+              onPrimary: Colors.white,
+              surface: Color(0xFF1E1E1E),
+              onSurface: Color(0xFFE0E0E0),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _startTime = picked;
+      });
+    }
+  }
+
   void _saveMedication() {
     if (!_formKey.currentState!.validate()) return;
 
@@ -82,6 +140,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
         _scheduleType == ScheduleType.everyHours ? null : List<TimeOfDay>.from(_fixedTimes);
 
     Navigator.pop(context, {
+      'id': widget.medicationToEdit?.id, // Include ID if editing
       'name': _nameController.text.trim(),
       'dosing': _dosingController.text.trim().isEmpty ? null : _dosingController.text.trim(),
       'pillCount': _hasLimit ? int.tryParse(_pillCountController.text) : null,
@@ -91,6 +150,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
       'scheduleType': _scheduleType,
       'interval': interval,
       'fixedTimes': times,
+      'startTime': _scheduleType == ScheduleType.everyHours ? _startTime : null,
     });
   }
 
@@ -120,7 +180,9 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          context.tr('add_medication'),
+                          widget.medicationToEdit != null
+                              ? 'Edit Medication'
+                              : context.tr('add_medication'),
                           style: const TextStyle(
                             color: Color(0xFFE0E0E0),
                             fontSize: 24,
@@ -324,6 +386,73 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                             Text(
                               context.tr('hours'),
                               style: const TextStyle(color: Color(0xFFE0E0E0)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.tr('starting_time'),
+                              style: const TextStyle(
+                                color: Color(0xFFE0E0E0),
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            InkWell(
+                              onTap: _startTime != null ? () => _selectStartTime() : null,
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2C2C2E),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _startTime != null
+                                          ? _startTime!.format(context)
+                                          : context.tr('select_time'),
+                                      style: TextStyle(
+                                        color: _startTime != null
+                                            ? const Color(0xFFE0E0E0)
+                                            : const Color(0xFF828282),
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.access_time,
+                                      color: Color(0xFF9B51E0),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () => _selectStartTime(),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2C2C2E),
+                                  foregroundColor: const Color(0xFF9B51E0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.access_time),
+                                label: Text(
+                                  _startTime == null
+                                      ? context.tr('set_start_time')
+                                      : context.tr('change_start_time'),
+                                ),
+                              ),
                             ),
                           ],
                         ),

@@ -41,6 +41,10 @@ const Map<String, Map<String, String>> translations = {
     'description_hint': 'Notes about this medication...',
     'required': 'Required',
     'invalid': 'Invalid',
+    'starting_time': 'Starting Time',
+    'select_time': 'Select Time',
+    'set_start_time': 'Set Start Time',
+    'change_start_time': 'Change Start Time',
   },
   'es': {
     'good_morning': 'Buenos Días',
@@ -84,5 +88,9 @@ const Map<String, Map<String, String>> translations = {
     'description_hint': 'Notas sobre este medicamento...',
     'required': 'Requerido',
     'invalid': 'Inválido',
+    'starting_time': 'Hora de Inicio',
+    'select_time': 'Seleccionar Hora',
+    'set_start_time': 'Establecer Hora de Inicio',
+    'change_start_time': 'Cambiar Hora de Inicio',
   },
 };
