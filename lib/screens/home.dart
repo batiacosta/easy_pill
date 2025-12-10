@@ -18,12 +18,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late String greeting;
   late String currentDate;
+  bool _isScheduledExpanded = true; // Track if Scheduled section is expanded
 
   // Color map for schedule types
   static const Map<ScheduleType, Color> scheduleTypeColors = {
-    ScheduleType.everyHours: Color(0xFF9B51E0),  // Purple
-    ScheduleType.fixedHours: Color(0xFF2D9CDB),  // Blue
-    ScheduleType.everyDays: Color(0xFF27AE60),   // Green
+    ScheduleType.everyHours: Color(0xFF9B51E0),  // Purple (primary)
+    ScheduleType.fixedHours: Color(0xFF2D9CDB),  // Blue (secondary)
+    ScheduleType.everyDays: Color(0xFFEB5757),   // Red (tertiary)
   };
 
   Color getScheduleTypeColor(ScheduleType type) {
@@ -227,6 +228,60 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     }
+  }
+
+  void _showClearMissedDialog(
+    BuildContext context,
+    MedicationProvider provider,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: Text(
+          'Clear Missed Doses',
+          style: const TextStyle(
+            color: Color(0xFFE0E0E0),
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: const Text(
+          'This will mark all missed doses as skipped. This action cannot be undone.',
+          style: TextStyle(
+            color: Color(0xFF828282),
+            fontSize: 14,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              context.trStatic('cancel'),
+              style: const TextStyle(color: Color(0xFF828282)),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              await provider.clearMissedDoses();
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Missed doses cleared'),
+                    backgroundColor: Color(0xFF9B51E0),
+                  ),
+                );
+              }
+            },
+            child: Text(
+              context.trStatic('clear'),
+              style: const TextStyle(color: Color(0xFFEB5757)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -455,23 +510,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                   const SizedBox(height: 16),
                                   // Scheduled section
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Text(
-                                      'Scheduled',
-                                      style: const TextStyle(
-                                        color: Color(0xFFE0E0E0),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _isScheduledExpanded = !_isScheduledExpanded;
+                                      });
+                                    },
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Scheduled',
+                                          style: const TextStyle(
+                                            color: Color(0xFFE0E0E0),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Icon(
+                                          _isScheduledExpanded
+                                              ? Icons.expand_less
+                                              : Icons.expand_more,
+                                          color: const Color(0xFF828282),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(height: 12),
-                                  if (scheduledDoses.isEmpty)
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
+                                  if (_isScheduledExpanded) ...[
+                                    if (scheduledDoses.isEmpty)
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
                                         color: const Color(0xFF1E1E1E),
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
@@ -487,8 +558,76 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                     )
+                                    else
+                                      for (final dose in scheduledDoses)
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 12),
+                                          child: _buildScheduledDoseCard(
+                                            context,
+                                            dose,
+                                            medicationProvider,
+                                          ),
+                                        ),
+                                  ],
+
+                                  const SizedBox(height: 24),
+                                  // Missed section
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        context.tr('missed'),
+                                        style: const TextStyle(
+                                          color: Color(0xFFE0E0E0),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      if (medicationProvider.getMissedDoses().isNotEmpty)
+                                        PopupMenuButton<String>(
+                                          onSelected: (value) {
+                                            if (value == 'clear') {
+                                              _showClearMissedDialog(context, medicationProvider);
+                                            }
+                                          },
+                                          itemBuilder: (BuildContext context) => [
+                                            PopupMenuItem<String>(
+                                              value: 'clear',
+                                              child: Text(
+                                                context.trStatic('clear'),
+                                              ),
+                                            ),
+                                          ],
+                                          icon: const Icon(
+                                            Icons.more_vert,
+                                            color: Color(0xFF828282),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  if (medicationProvider.getMissedDoses().isEmpty)
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1E1E1E),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: const Color(0xFF2C2C2C),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'No missed doses.',
+                                        style: TextStyle(
+                                          color: Color(0xFF828282),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    )
                                   else
-                                    for (final dose in scheduledDoses)
+                                    for (final dose in medicationProvider.getMissedDoses())
                                       Padding(
                                         padding: const EdgeInsets.only(bottom: 12),
                                         child: _buildScheduledDoseCard(

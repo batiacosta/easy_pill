@@ -39,6 +39,38 @@ class MedicationProvider with ChangeNotifier {
     return scheduledDoses;
   }
 
+  // Get all missed doses (doses before today that weren't taken or skipped)
+  List<ScheduledDose> getMissedDoses() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final thirtyDaysAgo = today.subtract(const Duration(days: 30));
+    final List<ScheduledDose> missedDoses = [];
+
+    for (final medication in _medications) {
+      missedDoses.addAll(_calculateScheduledDoses(medication, thirtyDaysAgo, today));
+    }
+
+    // Filter out skipped doses and doses that were taken
+    missedDoses.removeWhere((dose) {
+      final key = '${dose.medication.id}_${dose.scheduledTime.toIso8601String()}';
+      return _skippedDoseKeys.contains(key);
+    });
+
+    // Sort by scheduled time (newest first)
+    missedDoses.sort((a, b) => b.scheduledTime.compareTo(a.scheduledTime));
+    return missedDoses;
+  }
+
+  // Clear all missed doses by marking them as skipped
+  Future<void> clearMissedDoses() async {
+    final missedDoses = getMissedDoses();
+    for (final dose in missedDoses) {
+      await skipDose(dose.medication.id!, dose.scheduledTime);
+    }
+    notifyListeners();
+    debugPrint('Cleared ${missedDoses.length} missed doses');
+  }
+
   List<ScheduledDose> _calculateScheduledDoses(
     Medication medication,
     DateTime start,
