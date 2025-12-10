@@ -19,12 +19,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    currentDate = DateFormat('MMMM d').format(DateTime.now());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _updateGreeting();
   }
 
   void _updateGreeting() {
     final hour = DateTime.now().hour;
-    final now = DateTime.now();
 
     if (hour < 12) {
       greeting = context.tr('good_morning');
@@ -33,8 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       greeting = context.tr('good_evening');
     }
-
-    currentDate = DateFormat('MMMM d').format(now);
   }
 
   void _showDeleteDialog(
