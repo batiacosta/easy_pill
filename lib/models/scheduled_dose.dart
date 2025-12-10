@@ -27,6 +27,14 @@ class ScheduledDose {
     return '$hour:$minute';
   }
 
+  String formatTimeWithPeriod() {
+    final hour = scheduledTime.hour;
+    final minute = scheduledTime.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = (hour % 12 == 0) ? 12 : (hour % 12);
+    return '$displayHour:$minute $period';
+  }
+
   String formatDate() {
     final months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',

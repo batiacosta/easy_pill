@@ -19,6 +19,17 @@ class _HomeScreenState extends State<HomeScreen> {
   late String greeting;
   late String currentDate;
 
+  // Color map for schedule types
+  static const Map<ScheduleType, Color> scheduleTypeColors = {
+    ScheduleType.everyHours: Color(0xFF9B51E0),  // Purple
+    ScheduleType.fixedHours: Color(0xFF2D9CDB),  // Blue
+    ScheduleType.everyDays: Color(0xFF27AE60),   // Green
+  };
+
+  Color getScheduleTypeColor(ScheduleType type) {
+    return scheduleTypeColors[type] ?? const Color(0xFF9B51E0);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -628,8 +639,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? null
                     : () => provider.recordDoseTaken(medication.id!),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      takenToday ? const Color(0xFF2D9CDB) : const Color(0xFF9B51E0),
+                  backgroundColor: takenToday
+                      ? const Color(0xFF2D9CDB)
+                      : getScheduleTypeColor(medication.scheduleType),
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: const Color(0xFF2C2C2C),
                   disabledForegroundColor: const Color(0xFF828282),
@@ -888,7 +900,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFF9B51E0),
+                color: getScheduleTypeColor(dose.medication.scheduleType),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -903,10 +915,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    dose.formatTime(),
+                    dose.formatTimeWithPeriod(),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
