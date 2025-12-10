@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "1074899356040",
+    "project_id": "easypill-2194b",
+    "storage_bucket": "easypill-2194b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074899356040:android:5408d0012a89657093923d",
+        "android_client_info": {
+          "package_name": "com.example.easy_pill"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1074899356040-csre0bsvhi3e4rt5hupv7ipmchd6gs77.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAe1bc-CupuFDFkvcu7yIk3jE5chc-fG_g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1074899356040-csre0bsvhi3e4rt5hupv7ipmchd6gs77.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1074899356040-u7lhijmdgealgnh480n82mm7visb6i0m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.easyPill"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074899356040:android:279d326fe30de35093923d",
+        "android_client_info": {
+          "package_name": "com.octe.easypill"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1074899356040-csre0bsvhi3e4rt5hupv7ipmchd6gs77.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAe1bc-CupuFDFkvcu7yIk3jE5chc-fG_g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1074899356040-csre0bsvhi3e4rt5hupv7ipmchd6gs77.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1074899356040-u7lhijmdgealgnh480n82mm7visb6i0m.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.easyPill"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
