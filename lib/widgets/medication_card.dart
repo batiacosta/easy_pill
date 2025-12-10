@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../models/medication_item.dart';
-import '../providers/localization_provider.dart';
+import '../extensions/localization_extension.dart';
 
 class MedicationCard extends StatefulWidget {
   final MedicationItem medication;
@@ -138,8 +137,6 @@ class _MedicationCardState extends State<MedicationCard> {
                       }
                     },
                     itemBuilder: (BuildContext context) {
-                      final localization =
-                          context.read<LocalizationProvider>();
                       final items = <PopupMenuItem<String>>[];
                       
                       if (widget.showMarkInMenu && !widget.medication.isTaken) {
@@ -152,7 +149,7 @@ class _MedicationCardState extends State<MedicationCard> {
                                     color: Color(0xFFE0E0E0), size: 20),
                                 const SizedBox(width: 12),
                                 Text(
-                                  localization.getString('mark_as_taken'),
+                                  context.tr('mark_as_taken'),
                                   style: const TextStyle(
                                     color: Color(0xFFE0E0E0),
                                     fontSize: 14,
@@ -173,7 +170,7 @@ class _MedicationCardState extends State<MedicationCard> {
                                   color: Color(0xFFEB5757), size: 20),
                               const SizedBox(width: 12),
                               Text(
-                                localization.getString('skip_dose'),
+                                context.tr('skip_dose'),
                                 style: const TextStyle(
                                   color: Color(0xFFEB5757),
                                   fontSize: 14,
@@ -190,7 +187,7 @@ class _MedicationCardState extends State<MedicationCard> {
                                   color: Color(0xFFEB5757), size: 20),
                               const SizedBox(width: 12),
                               Text(
-                                localization.getString('remove_medication'),
+                                context.tr('remove_medication'),
                                 style: const TextStyle(
                                   color: Color(0xFFEB5757),
                                   fontSize: 14,
@@ -226,7 +223,7 @@ class _MedicationCardState extends State<MedicationCard> {
                           icon: const Icon(Icons.check_circle,
                               size: 20, color: Color(0xFF828282)),
                           label: Text(
-                            context.read<LocalizationProvider>().getString('taken'),
+                            context.tr('taken'),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -244,7 +241,7 @@ class _MedicationCardState extends State<MedicationCard> {
                             ),
                           ),
                           child: Text(
-                            context.read<LocalizationProvider>().getString('mark_as_taken'),
+                            context.tr('mark_as_taken'),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,

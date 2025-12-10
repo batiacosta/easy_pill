@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/home.dart';
 import 'providers/localization_provider.dart';
-import 'l10n/app_strings.dart';
 
 void main() {
   runApp(
@@ -25,7 +24,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Easy Pill',
           locale: localizationProvider.locale,
-          supportedLocales: AppLocalization.supportedLocales,
+          supportedLocales: LocalizationProvider.supportedLocales,
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
