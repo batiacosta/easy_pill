@@ -20,12 +20,12 @@ class MedicationProvider with ChangeNotifier {
   // Get all scheduled doses for the next 31 days (excluding today)
   List<ScheduledDose> getScheduledDoses() {
     final now = DateTime.now();
-    final tomorrow = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    final today = DateTime(now.year, now.month, now.day);
     final endDate = now.add(const Duration(days: 31));
     final List<ScheduledDose> scheduledDoses = [];
 
     for (final medication in _medications) {
-      scheduledDoses.addAll(_calculateScheduledDoses(medication, tomorrow, endDate));
+      scheduledDoses.addAll(_calculateScheduledDoses(medication, today, endDate));
     }
 
     // Filter out skipped doses
@@ -82,19 +82,21 @@ class MedicationProvider with ChangeNotifier {
       case ScheduleType.everyHours:
         if (medication.interval == null) break;
         
+        final now = DateTime.now();
+        
         // Calculate first dose time based on startTime or current hour
         DateTime nextDose;
         if (medication.startTime != null) {
           // Use the specified start time
-          var candidateTime = DateTime(start.year, start.month, start.day, medication.startTime!.hour, medication.startTime!.minute);
-          // If we're calculating from tomorrow onwards, we need to find the first occurrence
-          if (candidateTime.isBefore(start)) {
+          var candidateTime = DateTime(now.year, now.month, now.day, medication.startTime!.hour, medication.startTime!.minute);
+          // If start time has already passed today, start from tomorrow
+          if (candidateTime.isBefore(now)) {
             candidateTime = candidateTime.add(const Duration(days: 1));
           }
           nextDose = candidateTime;
         } else {
-          // Default: use start hour
-          nextDose = DateTime(start.year, start.month, start.day, start.hour);
+          // Default: use current time as the starting point
+          nextDose = now;
         }
         
         int doseCount = 0;
@@ -117,6 +119,8 @@ class MedicationProvider with ChangeNotifier {
         if (medication.fixedTimes == null) break;
         int doseCount = 0;
         
+        final now = DateTime.now();
+        
         for (int day = 0; day < 31; day++) {
           final targetDate = start.add(Duration(days: day));
           if (targetDate.isAfter(end)) break;
@@ -132,7 +136,8 @@ class MedicationProvider with ChangeNotifier {
               time.minute,
             );
             
-            if (scheduledDate.isAfter(start) && scheduledDate.isBefore(end)) {
+            // Only include doses that are in the future (after now)
+            if (scheduledDate.isAfter(now) && scheduledDate.isBefore(end)) {
               doses.add(ScheduledDose(
                 medication: medication,
                 scheduledTime: scheduledDate,
@@ -146,6 +151,8 @@ class MedicationProvider with ChangeNotifier {
       case ScheduleType.everyDays:
         if (medication.interval == null || medication.fixedTimes == null) break;
         int doseCount = 0;
+        
+        final now = DateTime.now();
         
         for (int cycle = 0; cycle < 31; cycle++) {
           final targetDate = start.add(Duration(days: medication.interval! * cycle));
@@ -162,7 +169,8 @@ class MedicationProvider with ChangeNotifier {
               time.minute,
             );
             
-            if (scheduledDate.isAfter(start) && scheduledDate.isBefore(end)) {
+            // Only include doses that are in the future (after now)
+            if (scheduledDate.isAfter(now) && scheduledDate.isBefore(end)) {
               doses.add(ScheduledDose(
                 medication: medication,
                 scheduledTime: scheduledDate,
