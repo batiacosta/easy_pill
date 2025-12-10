@@ -7,6 +7,8 @@ import '../widgets/add_medication_modal.dart';
 import '../extensions/localization_extension.dart';
 import '../services/notification_service.dart';
 import '../providers/medication_provider.dart';
+import '../providers/auth_provider.dart';
+import 'account.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -330,34 +332,58 @@ class _HomeScreenState extends State<HomeScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    '$greeting, Alex',
-                                    style: const TextStyle(
-                                      color: Color(0xFFE0E0E0),
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                        Icons.notifications_outlined,
-                                        color: Color(0xFFE0E0E0),
-                                        size: 28),
-                                    onPressed: () async {
-                                      // Test notification
-                                      await NotificationService()
-                                          .scheduleTestNotification();
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                                'Test notification scheduled for 5 seconds from now'),
-                                            duration: Duration(seconds: 2),
-                                          ),
-                                        );
-                                      }
+                                  Consumer<AuthProvider>(
+                                    builder: (context, authProvider, _) {
+                                      final userName = authProvider.isFirebaseEnabled 
+                                          ? (authProvider.user?.displayName ?? 'User')
+                                          : 'User';
+                                      return Text(
+                                        '$greeting, $userName',
+                                        style: const TextStyle(
+                                          color: Color(0xFFE0E0E0),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      );
                                     },
+                                  ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.notifications_outlined,
+                                            color: Color(0xFFE0E0E0),
+                                            size: 28),
+                                        onPressed: () async {
+                                          // Test notification
+                                          await NotificationService()
+                                              .scheduleTestNotification();
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'Test notification scheduled for 5 seconds from now'),
+                                                duration: Duration(seconds: 2),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.account_circle_outlined,
+                                            color: Color(0xFFE0E0E0),
+                                            size: 28),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) => const AccountScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
