@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/medication.dart';
+import '../models/scheduled_dose.dart';
 import '../services/database_service.dart';
 import '../services/notification_service.dart';
 
@@ -9,11 +10,125 @@ class MedicationProvider with ChangeNotifier {
   
   List<Medication> _medications = [];
   Map<int, int> _todayDoseCounts = {};
+  Set<String> _skippedDoseKeys = {};
   bool _isLoading = false;
 
   List<Medication> get medications => _medications;
   Map<int, int> get todayDoseCounts => _todayDoseCounts;
   bool get isLoading => _isLoading;
+
+  // Get all scheduled doses for the next 31 days (excluding today)
+  List<ScheduledDose> getScheduledDoses() {
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    final endDate = now.add(const Duration(days: 31));
+    final List<ScheduledDose> scheduledDoses = [];
+
+    for (final medication in _medications) {
+      scheduledDoses.addAll(_calculateScheduledDoses(medication, tomorrow, endDate));
+    }
+
+    // Filter out skipped doses
+    scheduledDoses.removeWhere((dose) {
+      final key = '${dose.medication.id}_${dose.scheduledTime.toIso8601String()}';
+      return _skippedDoseKeys.contains(key);
+    });
+
+    // Sort by scheduled time
+    scheduledDoses.sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
+    return scheduledDoses;
+  }
+
+  List<ScheduledDose> _calculateScheduledDoses(
+    Medication medication,
+    DateTime start,
+    DateTime end,
+  ) {
+    final doses = <ScheduledDose>[];
+    
+    switch (medication.scheduleType) {
+      case ScheduleType.everyHours:
+        if (medication.interval == null) break;
+        var nextDose = DateTime(start.year, start.month, start.day, start.hour);
+        int doseCount = 0;
+        
+        while (nextDose.isBefore(end)) {
+          nextDose = nextDose.add(Duration(hours: medication.interval!));
+          if (nextDose.isAfter(start) && nextDose.isBefore(end)) {
+            if (medication.pillCount == null || doseCount < medication.pillCount!) {
+              doses.add(ScheduledDose(
+                medication: medication,
+                scheduledTime: nextDose,
+              ));
+              doseCount++;
+            }
+          }
+        }
+        break;
+
+      case ScheduleType.fixedHours:
+        if (medication.fixedTimes == null) break;
+        int doseCount = 0;
+        
+        for (int day = 0; day < 31; day++) {
+          final targetDate = start.add(Duration(days: day));
+          if (targetDate.isAfter(end)) break;
+          
+          for (final time in medication.fixedTimes!) {
+            if (medication.pillCount != null && doseCount >= medication.pillCount!) break;
+            
+            final scheduledDate = DateTime(
+              targetDate.year,
+              targetDate.month,
+              targetDate.day,
+              time.hour,
+              time.minute,
+            );
+            
+            if (scheduledDate.isAfter(start) && scheduledDate.isBefore(end)) {
+              doses.add(ScheduledDose(
+                medication: medication,
+                scheduledTime: scheduledDate,
+              ));
+              doseCount++;
+            }
+          }
+        }
+        break;
+
+      case ScheduleType.everyDays:
+        if (medication.interval == null || medication.fixedTimes == null) break;
+        int doseCount = 0;
+        
+        for (int cycle = 0; cycle < 31; cycle++) {
+          final targetDate = start.add(Duration(days: medication.interval! * cycle));
+          if (targetDate.isAfter(end)) break;
+          
+          for (final time in medication.fixedTimes!) {
+            if (medication.pillCount != null && doseCount >= medication.pillCount!) break;
+            
+            final scheduledDate = DateTime(
+              targetDate.year,
+              targetDate.month,
+              targetDate.day,
+              time.hour,
+              time.minute,
+            );
+            
+            if (scheduledDate.isAfter(start) && scheduledDate.isBefore(end)) {
+              doses.add(ScheduledDose(
+                medication: medication,
+                scheduledTime: scheduledDate,
+              ));
+              doseCount++;
+            }
+          }
+        }
+        break;
+    }
+    
+    return doses;
+  }
 
   // Load all medications from database
   Future<void> loadMedications() async {
@@ -23,6 +138,7 @@ class MedicationProvider with ChangeNotifier {
     try {
       _medications = await _dbService.getAllMedications();
       _todayDoseCounts = await _dbService.getTodayDoseCounts();
+      _skippedDoseKeys = await _dbService.getAllSkippedDoseKeys();
       debugPrint('Loaded ${_medications.length} medications');
       notifyListeners();
     } catch (e) {
@@ -187,6 +303,23 @@ class MedicationProvider with ChangeNotifier {
       return await _dbService.getTodaysDoseCount(medicationId);
     } catch (e) {
       debugPrint('Error getting today dose count: $e');
+      rethrow;
+    }
+  }
+
+  // Skip a dose
+  Future<void> skipDose(int medicationId, DateTime scheduledTime) async {
+    try {
+      await _dbService.skipDose(medicationId, scheduledTime);
+      
+      // Add to skipped set
+      final key = '${medicationId}_${scheduledTime.toIso8601String()}';
+      _skippedDoseKeys.add(key);
+      
+      notifyListeners();
+      debugPrint('Dose skipped for medication ID: $medicationId at $scheduledTime');
+    } catch (e) {
+      debugPrint('Error skipping dose: $e');
       rethrow;
     }
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/medication.dart';
+import '../models/scheduled_dose.dart';
 import '../widgets/add_medication_modal.dart';
 import '../extensions/localization_extension.dart';
 import '../services/notification_service.dart';
@@ -180,6 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 final medications = medicationProvider.medications;
                 final todayCounts = medicationProvider.todayDoseCounts;
+                final scheduledDoses = medicationProvider.getScheduledDoses();
 
                 final pendingToday = medications
                     .where((m) => _isDueToday(m) && (todayCounts[m.id] ?? 0) == 0)
@@ -381,6 +383,51 @@ class _HomeScreenState extends State<HomeScreen> {
                                           medicationProvider,
                                           takenToday: true,
                                           dueToday: true,
+                                        ),
+                                      ),
+
+                                  const SizedBox(height: 16),
+                                  // Scheduled section
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      'Scheduled',
+                                      style: const TextStyle(
+                                        color: Color(0xFFE0E0E0),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  if (scheduledDoses.isEmpty)
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF1E1E1E),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: const Color(0xFF2C2C2C),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'No scheduled doses.',
+                                        style: TextStyle(
+                                          color: Color(0xFF828282),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    for (final dose in scheduledDoses)
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 12),
+                                        child: _buildScheduledDoseCard(
+                                          context,
+                                          dose,
+                                          medicationProvider,
                                         ),
                                       ),
                                 ],
@@ -647,7 +694,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               onTap: () {
                 Navigator.pop(context);
-                _showSkipDoseDialog(context, medication);
+                _showSkipDoseDialog(context, medication, scheduledTime: null);
               },
             ),
             const Divider(color: Color(0xFF2C2C2C), height: 8),
@@ -659,6 +706,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: const TextStyle(color: Color(0xFFEB5757)),
               ),
               onTap: () {
+                final scaffold = ScaffoldMessenger.of(context);
+                final medName = medication.name;
                 Navigator.pop(context);
                 _showDeleteDialog(
                   context,
@@ -667,9 +716,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   'Remove ${medication.name} and all its scheduled doses?',
                   () {
                     provider.deleteMedication(medication.id!);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    scaffold.showSnackBar(
                       SnackBar(
-                        content: Text('${medication.name} removed'),
+                        content: Text('$medName removed'),
                         backgroundColor: const Color(0xFFEB5757),
                       ),
                     );
@@ -683,7 +732,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showSkipDoseDialog(BuildContext context, Medication medication) {
+  void _showSkipDoseDialog(BuildContext context, Medication medication, {DateTime? scheduledTime}) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -720,6 +769,12 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+                final provider = context.read<MedicationProvider>();
+                
+                // If no specific time, skip next dose (now)
+                final timeToSkip = scheduledTime ?? DateTime.now();
+                provider.skipDose(medication.id!, timeToSkip);
+                
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('${medication.name} dose skipped'),
@@ -739,6 +794,194 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildScheduledDoseCard(
+    BuildContext context,
+    ScheduledDose dose,
+    MedicationProvider provider,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF2C2C2C),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Time badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF9B51E0),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    dose.formatDate(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    dose.formatTime(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Medication info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    dose.medication.name,
+                    style: const TextStyle(
+                      color: Color(0xFFE0E0E0),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (dose.medication.dosing != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      dose.medication.dosing!,
+                      style: const TextStyle(
+                        color: Color(0xFF828282),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // Options menu
+            IconButton(
+              icon: const Icon(Icons.more_vert,
+                  color: Color(0xFF828282), size: 24),
+              onPressed: () => _showScheduledDoseOptions(
+                context,
+                dose,
+                provider,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showScheduledDoseOptions(
+    BuildContext context,
+    ScheduledDose dose,
+    MedicationProvider provider,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              dose.medication.name,
+              style: const TextStyle(
+                color: Color(0xFFE0E0E0),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              dose.formatDateTime(),
+              style: const TextStyle(
+                color: Color(0xFF828282),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Mark as Taken
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline, color: Color(0xFF9B51E0)),
+              title: Text(
+                context.trStatic('mark_as_taken'),
+                style: const TextStyle(color: Color(0xFF9B51E0)),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                provider.recordDoseTaken(dose.medication.id!);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${dose.medication.name} marked as taken'),
+                    backgroundColor: const Color(0xFF9B51E0),
+                  ),
+                );
+              },
+            ),
+            const Divider(color: Color(0xFF2C2C2C), height: 8),
+            // Skip Dose
+            ListTile(
+              leading: const Icon(Icons.skip_next, color: Color(0xFF2D9CDB)),
+              title: Text(
+                context.trStatic('skip_dose'),
+                style: const TextStyle(color: Color(0xFF2D9CDB)),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showSkipDoseDialog(context, dose.medication, scheduledTime: dose.scheduledTime);
+              },
+            ),
+            const Divider(color: Color(0xFF2C2C2C), height: 8),
+            // Remove Medication
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: Color(0xFFEB5757)),
+              title: Text(
+                context.trStatic('remove_medication'),
+                style: const TextStyle(color: Color(0xFFEB5757)),
+              ),
+              onTap: () {
+                final scaffold = ScaffoldMessenger.of(context);
+                final medName = dose.medication.name;
+                Navigator.pop(context);
+                _showDeleteDialog(
+                  context,
+                  dose.medication.name,
+                  context.trStatic('remove_medication'),
+                  'Remove ${dose.medication.name} and all its scheduled doses?',
+                  () {
+                    provider.deleteMedication(dose.medication.id!);
+                    scaffold.showSnackBar(
+                      SnackBar(
+                        content: Text('$medName removed'),
+                        backgroundColor: const Color(0xFFEB5757),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

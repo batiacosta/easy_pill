@@ -23,7 +23,7 @@ class DatabaseService {
 
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -55,12 +55,35 @@ class DatabaseService {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE skipped_doses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        medication_id INTEGER NOT NULL,
+        scheduled_time TEXT NOT NULL,
+        skipped_at TEXT NOT NULL,
+        FOREIGN KEY(medication_id) REFERENCES medications(id) ON DELETE CASCADE
+      )
+    ''');
+
     debugPrint('Database tables created');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < newVersion) {
       debugPrint('Upgrading database from $oldVersion to $newVersion');
+      
+      // Add skipped_doses table if upgrading from version 1
+      if (oldVersion < 2) {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS skipped_doses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            medication_id INTEGER NOT NULL,
+            scheduled_time TEXT NOT NULL,
+            skipped_at TEXT NOT NULL,
+            FOREIGN KEY(medication_id) REFERENCES medications(id) ON DELETE CASCADE
+          )
+        ''');
+      }
     }
   }
 
@@ -260,9 +283,64 @@ class DatabaseService {
     }
   }
 
+  // Skipped Doses Operations
+  Future<void> skipDose(int medicationId, DateTime scheduledTime) async {
+    try {
+      final db = await database;
+      await db.insert(
+        'skipped_doses',
+        {
+          'medication_id': medicationId,
+          'scheduled_time': scheduledTime.toIso8601String(),
+          'skipped_at': DateTime.now().toIso8601String(),
+        },
+      );
+      debugPrint('Skipped dose for medication ID: $medicationId at $scheduledTime');
+    } catch (e) {
+      debugPrint('Error skipping dose: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<DateTime>> getSkippedDosesForMedication(int medicationId) async {
+    try {
+      final db = await database;
+      final maps = await db.query(
+        'skipped_doses',
+        where: 'medication_id = ?',
+        whereArgs: [medicationId],
+        orderBy: 'scheduled_time DESC',
+      );
+
+      return [
+        for (final map in maps)
+          DateTime.parse(map['scheduled_time'] as String),
+      ];
+    } catch (e) {
+      debugPrint('Error getting skipped doses: $e');
+      rethrow;
+    }
+  }
+
+  Future<Set<String>> getAllSkippedDoseKeys() async {
+    try {
+      final db = await database;
+      final maps = await db.query('skipped_doses');
+
+      return {
+        for (final map in maps)
+          '${map['medication_id']}_${map['scheduled_time']}',
+      };
+    } catch (e) {
+      debugPrint('Error getting all skipped dose keys: $e');
+      rethrow;
+    }
+  }
+
   Future<void> deleteAllData() async {
     try {
       final db = await database;
+      await db.delete('skipped_doses');
       await db.delete('dose_history');
       await db.delete('medications');
       debugPrint('All data deleted');
