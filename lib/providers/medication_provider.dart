@@ -443,6 +443,19 @@ class MedicationProvider with ChangeNotifier {
     }
   }
 
+  // Reschedule notifications for all medications (used after sync/auth changes)
+  Future<void> rescheduleAllNotifications() async {
+    try {
+      await _notificationService.cancelAllNotifications();
+      for (final med in _medications) {
+        await _scheduleNotificationsForMedication(med);
+      }
+      debugPrint('Rescheduled notifications for all medications');
+    } catch (e) {
+      debugPrint('Error rescheduling all notifications: $e');
+    }
+  }
+
   // Refresh medications from database (for syncing)
   Future<void> refreshMedications() async {
     _isLoading = true;
@@ -456,6 +469,40 @@ class MedicationProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error refreshing medications: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Replace local medications with remote ones (used after login/sync)
+  Future<void> replaceWithRemote(List<Medication> remoteMeds) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      // Clear local data
+      await _notificationService.cancelAllNotifications();
+      await _dbService.clearAllMedicationsData();
+
+      // Insert remote meds locally and schedule notifications
+      _medications = [];
+      for (final med in remoteMeds) {
+        final newId = await _dbService.insertMedication(med);
+        final saved = med.copyWith(id: newId);
+        _medications.add(saved);
+      }
+
+      _todayDoseCounts = await _dbService.getTodayDoseCounts();
+      _skippedDoseKeys = await _dbService.getAllSkippedDoseKeys();
+
+      // Reschedule notifications for all
+      await rescheduleAllNotifications();
+
+      debugPrint('Replaced local medications with ${remoteMeds.length} remote meds');
+    } catch (e) {
+      debugPrint('Error replacing with remote meds: $e');
       rethrow;
     } finally {
       _isLoading = false;

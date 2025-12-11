@@ -194,6 +194,15 @@ class DatabaseService {
     }
   }
 
+  // Remove all medications and related data (used when replacing local data from cloud)
+  Future<void> clearAllMedicationsData() async {
+    final db = await database;
+    await db.delete('dose_history');
+    await db.delete('skipped_doses');
+    await db.delete('medications');
+    debugPrint('Cleared all medication data');
+  }
+
   // Dose History Operations
   Future<void> recordDoseTaken(int medicationId) async {
     try {

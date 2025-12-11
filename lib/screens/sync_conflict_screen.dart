@@ -56,8 +56,10 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
           ),
         );
 
-        Navigator.of(context).pop(true);
+        // Return user to Home
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
+      // If not successful, keep user on screen (error handled below)
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -81,107 +83,107 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
         backgroundColor: const Color(0xFF1E1E1E),
       ),
       backgroundColor: const Color(0xFF121212),
-      body: ListView.builder(
+      body: Padding(
         padding: const EdgeInsets.all(16),
-        itemCount: widget.conflicts.length + 1,
-        itemBuilder: (context, index) {
-          if (index == widget.conflicts.length) {
-            // Action buttons
-            return Padding(
-              padding: const EdgeInsets.only(top: 24),
-                  child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _applyResolutions,
-                      icon: const Icon(Icons.check),
-                      label: Text(localizationProvider.tr('apply_resolutions')),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF9B51E0),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white24),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: Text(localizationProvider.tr('cancel')),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: widget.conflicts.length,
+                itemBuilder: (context, index) {
+                  final conflict = widget.conflicts[index];
+                  final strategy = _resolutions[conflict.medicationId] ?? ConflictResolutionStrategy.merge;
 
-          final conflict = widget.conflicts[index];
-          final strategy = _resolutions[conflict.medicationId] ?? ConflictResolutionStrategy.merge;          return Card(
-            color: const Color(0xFF1E1E1E),
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Medication: ${conflict.localMedication.name}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                  return Card(
+                    color: const Color(0xFF1E1E1E),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Medication: ${conflict.localMedication.name}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Local and cloud versions differ',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildStrategyOption(
+                            localizationProvider,
+                            ConflictResolutionStrategy.merge,
+                            'Merge Both Versions',
+                            'Keep all data from both local and cloud',
+                            Icons.merge,
+                            strategy,
+                            conflict.medicationId,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildStrategyOption(
+                            localizationProvider,
+                            ConflictResolutionStrategy.keepOnline,
+                            'Keep Cloud Version',
+                            'Replace local data with cloud data',
+                            Icons.cloud_download,
+                            strategy,
+                            conflict.medicationId,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildStrategyOption(
+                            localizationProvider,
+                            ConflictResolutionStrategy.keepLocal,
+                            'Keep Local Version',
+                            'Replace cloud data with local data',
+                            Icons.phone_android,
+                            strategy,
+                            conflict.medicationId,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Local and cloud versions differ',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildStrategyOption(
-                    localizationProvider,
-                    ConflictResolutionStrategy.merge,
-                    'Merge Both Versions',
-                    'Keep all data from both local and cloud',
-                    Icons.merge,
-                    strategy,
-                    conflict.medicationId,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildStrategyOption(
-                    localizationProvider,
-                    ConflictResolutionStrategy.keepOnline,
-                    'Keep Cloud Version',
-                    'Replace local data with cloud data',
-                    Icons.cloud_download,
-                    strategy,
-                    conflict.medicationId,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildStrategyOption(
-                    localizationProvider,
-                    ConflictResolutionStrategy.keepLocal,
-                    'Keep Local Version',
-                    'Replace cloud data with local data',
-                    Icons.phone_android,
-                    strategy,
-                    conflict.medicationId,
-                  ),
-                ],
+                  );
+                },
               ),
             ),
-          );
-        },
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _applyResolutions,
+                icon: const Icon(Icons.check),
+                label: Text(localizationProvider.tr('apply_resolutions')),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF9B51E0),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white24),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: Text(localizationProvider.tr('cancel')),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

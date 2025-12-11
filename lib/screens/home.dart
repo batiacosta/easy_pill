@@ -6,6 +6,7 @@ import '../models/scheduled_dose.dart';
 import '../widgets/add_medication_modal.dart';
 import '../extensions/localization_extension.dart';
 import '../services/notification_service.dart';
+import '../services/firestore_service.dart';
 import '../providers/medication_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/sync_provider.dart';
@@ -24,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late String greeting;
   late String currentDate;
   bool _isScheduledExpanded = true; // Track if Scheduled section is expanded
+  VoidCallback? _authListener;
 
   // Color map for schedule types
   static const Map<ScheduleType, Color> scheduleTypeColors = {
@@ -41,6 +43,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     currentDate = DateFormat('MMMM d').format(DateTime.now());
     _initializeApp();
+    // Listen to auth changes to refresh content and notifications
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = context.read<AuthProvider>();
+      _authListener = () => _handleAuthChange(authProvider);
+      authProvider.addListener(_authListener!);
+    });
   }
 
   @override
@@ -48,6 +56,15 @@ class _HomeScreenState extends State<HomeScreen> {
     super.didUpdateWidget(oldWidget);
     // Refresh when returning from auth screens
     setState(() {});
+  }
+
+  @override
+  void dispose() {
+    final authProvider = context.read<AuthProvider>();
+    if (_authListener != null) {
+      authProvider.removeListener(_authListener!);
+    }
+    super.dispose();
   }
 
   @override
@@ -101,9 +118,12 @@ class _HomeScreenState extends State<HomeScreen> {
       if (result == true && mounted) {
         // Sync was successful, refresh data
         await medicationProvider.refreshMedications();
+        await medicationProvider.rescheduleAllNotifications();
       }
     } else if (success && mounted) {
       // Silent sync success
+      await medicationProvider.refreshMedications();
+      await medicationProvider.rescheduleAllNotifications();
       debugPrint('Sync completed successfully');
     }
   }
@@ -118,6 +138,40 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       greeting = context.tr('good_evening');
     }
+  }
+
+  Future<void> _handleAuthChange(AuthProvider authProvider) async {
+    if (!mounted) return;
+    final medicationProvider = context.read<MedicationProvider>();
+    final syncProvider = context.read<SyncProvider>();
+    final firestoreService = FirestoreService();
+
+    // Always refresh local data after auth state changes
+    await medicationProvider.loadMedications();
+
+    // If authenticated and Firebase is enabled, sync and reschedule notifications
+    if (authProvider.isAuthenticated && authProvider.isFirebaseEnabled) {
+      // Pull remote meds
+      try {
+        final remoteMeds = await firestoreService.downloadMedications();
+        if (remoteMeds.isNotEmpty) {
+          // If local is empty or count differs, replace with remote
+          if (medicationProvider.medications.isEmpty ||
+              remoteMeds.length != medicationProvider.medications.length) {
+            await medicationProvider.replaceWithRemote(remoteMeds);
+          }
+        }
+      } catch (e) {
+        debugPrint('Error fetching remote medications: $e');
+      }
+
+      await _performSync(syncProvider);
+    }
+
+    // Reschedule notifications based on latest data
+    await medicationProvider.rescheduleAllNotifications();
+
+    if (mounted) setState(() {});
   }
 
   void _showDeleteDialog(
