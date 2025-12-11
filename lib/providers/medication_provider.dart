@@ -24,11 +24,12 @@ class MedicationProvider with ChangeNotifier {
   List<ScheduledDose> getScheduledDoses() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
     final endDate = now.add(const Duration(days: 31));
     final List<ScheduledDose> scheduledDoses = [];
 
     for (final medication in _medications) {
-      scheduledDoses.addAll(_calculateScheduledDoses(medication, today, endDate));
+      scheduledDoses.addAll(_calculateScheduledDoses(medication, tomorrow, endDate));
     }
 
     // Filter out skipped doses
@@ -41,6 +42,29 @@ class MedicationProvider with ChangeNotifier {
     scheduledDoses.sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
     return scheduledDoses;
   }
+
+  // Get all doses scheduled for today
+  List<ScheduledDose> getTodayDoses() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final List<ScheduledDose> todayDoses = [];
+
+    for (final medication in _medications) {
+      todayDoses.addAll(_calculateScheduledDoses(medication, today, tomorrow));
+    }
+
+    // Filter out skipped doses
+    todayDoses.removeWhere((dose) {
+      final key = '${dose.medication.id}_${dose.scheduledTime.toIso8601String()}';
+      return _skippedDoseKeys.contains(key);
+    });
+
+    // Sort by scheduled time
+    todayDoses.sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
+    return todayDoses;
+  }
+
 
   // Get all missed doses (doses before today that weren't taken or skipped)
   List<ScheduledDose> getMissedDoses() {
@@ -86,8 +110,9 @@ class MedicationProvider with ChangeNotifier {
         if (medication.interval == null) break;
         
         final now = DateTime.now();
+        int doseCount = 0;
         
-        // Calculate first dose time based on startTime or current hour
+        // Calculate first dose time based on startTime or current time
         DateTime nextDose;
         if (medication.startTime != null) {
           // Use the specified start time
@@ -98,22 +123,32 @@ class MedicationProvider with ChangeNotifier {
           }
           nextDose = candidateTime;
         } else {
-          // Default: use current time as the starting point
+          // Default: use current time rounded to the next hour or current time
           nextDose = now;
         }
         
-        int doseCount = 0;
-        
-        while (nextDose.isBefore(end)) {
-          nextDose = nextDose.add(Duration(hours: medication.interval!));
-          if (nextDose.isAfter(start) && nextDose.isBefore(end)) {
-            if (medication.pillCount == null || doseCount < medication.pillCount!) {
-              doses.add(ScheduledDose(
-                medication: medication,
-                scheduledTime: nextDose,
-              ));
-              doseCount++;
-            }
+        // Generate doses based on the interval
+        while (doseCount < (medication.pillCount ?? 1000)) {
+          // For the first iteration, check if we should add the current dose
+          // For subsequent iterations, add the interval first
+          if (doseCount > 0) {
+            nextDose = nextDose.add(Duration(hours: medication.interval!));
+          }
+          
+          // Include the dose if it's now or in the future, and before the end date
+          if (!nextDose.isBefore(now) && nextDose.isBefore(end)) {
+            doses.add(ScheduledDose(
+              medication: medication,
+              scheduledTime: nextDose,
+            ));
+            doseCount++;
+          } else if (nextDose.isAfter(end)) {
+            break;
+          } else if (doseCount == 0) {
+            // First dose hasn't happened yet in the valid range, try adding interval
+            continue;
+          } else {
+            break;
           }
         }
         break;
@@ -148,6 +183,9 @@ class MedicationProvider with ChangeNotifier {
               doseCount++;
             }
           }
+          
+          // Stop if we've reached the pill limit
+          if (medication.pillCount != null && doseCount >= medication.pillCount!) break;
         }
         break;
 
@@ -181,6 +219,9 @@ class MedicationProvider with ChangeNotifier {
               doseCount++;
             }
           }
+          
+          // Stop if we've reached the pill limit
+          if (medication.pillCount != null && doseCount >= medication.pillCount!) break;
         }
         break;
     }
@@ -274,10 +315,39 @@ class MedicationProvider with ChangeNotifier {
       // Find the medication
       final medicationIndex = _medications.indexWhere((m) => m.id == medicationId);
       if (medicationIndex != -1) {
-        // Recalculate notifications for this medication
-        await _rescheduleNotificationsForMedication(_medications[medicationIndex]);
-        final currentCount = _todayDoseCounts[medicationId] ?? 0;
-        _todayDoseCounts[medicationId] = currentCount + 1;
+        final medication = _medications[medicationIndex];
+
+        // Decrement pillCount if finite, ensuring it never goes below zero
+        Medication updatedMedication = medication;
+        if (medication.pillCount != null) {
+          final newCount = medication.pillCount! > 0 ? medication.pillCount! - 1 : 0;
+          updatedMedication = medication.copyWith(pillCount: newCount);
+
+          // Persist new pillCount locally
+          await _dbService.updateMedication(updatedMedication);
+          _medications[medicationIndex] = updatedMedication;
+
+          // Reschedule based on remaining doses
+          await _rescheduleNotificationsForMedication(updatedMedication);
+        }
+
+        // Refresh today's dose count from database
+        _todayDoseCounts = await _dbService.getTodayDoseCounts();
+        
+        // Sync medication + dose history to Firestore if authenticated
+        try {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            await _firestoreService.uploadMedication(updatedMedication);
+            final doseHistory = await _dbService.getDoseHistoryForMedication(medicationId);
+            await _firestoreService.syncDoseHistory(medicationId, doseHistory);
+            debugPrint('Synced medication and dose history for medication $medicationId to Firestore');
+          }
+        } catch (e) {
+          debugPrint('Could not sync to Firestore: $e');
+          // Don't throw - local recording was successful
+        }
+        
         notifyListeners();
       }
       
@@ -291,55 +361,30 @@ class MedicationProvider with ChangeNotifier {
   // Schedule notifications for a medication
   Future<void> _scheduleNotificationsForMedication(Medication medication) async {
     try {
-      switch (medication.scheduleType) {
-        case ScheduleType.everyHours:
-          if (medication.interval == null || medication.interval! <= 0) {
-            debugPrint('Skipping scheduleEveryHours: missing/invalid interval for ${medication.name}');
-            return;
-          }
-          await _notificationService.scheduleEveryHours(
-            id: medication.notificationId,
-            medicationName: medication.name,
-            hours: medication.interval!,
-            dosing: medication.dosing,
-            totalDoses: medication.pillCount,
-            startTime: medication.startTime,
-          );
-          break;
-        case ScheduleType.fixedHours:
-          final times = medication.fixedTimes;
-          if (times == null || times.isEmpty) {
-            debugPrint('Skipping scheduleFixedHours: no times for ${medication.name}');
-            return;
-          }
-          await _notificationService.scheduleFixedHours(
-            id: medication.notificationId,
-            medicationName: medication.name,
-            times: times,
-            dosing: medication.dosing,
-            totalDoses: medication.pillCount,
-          );
-          break;
-        case ScheduleType.everyDays:
-          final times = medication.fixedTimes;
-          if (medication.interval == null || medication.interval! <= 0) {
-            debugPrint('Skipping scheduleEveryDays: missing/invalid interval for ${medication.name}');
-            return;
-          }
-          if (times == null || times.isEmpty) {
-            debugPrint('Skipping scheduleEveryDays: no times for ${medication.name}');
-            return;
-          }
-          await _notificationService.scheduleEveryDays(
-            id: medication.notificationId,
-            medicationName: medication.name,
-            days: medication.interval!,
-            times: times,
-            dosing: medication.dosing,
-            totalDoses: medication.pillCount,
-          );
-          break;
+      // Get the actual calculated doses for this medication
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final endDate = now.add(const Duration(days: 31));
+      
+      final doses = _calculateScheduledDoses(medication, today, endDate);
+      
+      if (doses.isEmpty) {
+        debugPrint('No doses to schedule for ${medication.name}');
+        return;
       }
+      
+      // Schedule notifications for each calculated dose
+      int notificationId = medication.notificationId;
+      for (final dose in doses) {
+        await _notificationService.scheduleSingleNotification(
+          id: notificationId++,
+          title: 'Time to take your medication',
+          body: _notificationService.buildNotificationBody(medication.name, medication.dosing),
+          scheduledDate: dose.scheduledTime,
+        );
+      }
+      
+      debugPrint('Scheduled ${doses.length} notifications for ${medication.name}');
     } catch (e) {
       debugPrint('Error scheduling notifications: $e');
       rethrow;
@@ -510,4 +555,6 @@ class MedicationProvider with ChangeNotifier {
     }
   }
 }
+       // Sync dose history to Firestore if authenticated
+
 

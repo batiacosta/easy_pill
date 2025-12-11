@@ -199,4 +199,29 @@ class FirestoreService {
       return null;
     }
   }
+
+  /// Sync dose history to Firestore
+  Future<void> syncDoseHistory(int medicationId, List<DateTime> doseHistory) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('User not authenticated');
+
+      // Store dose history timestamps as ISO strings
+      final doseTimes = doseHistory.map((date) => date.toIso8601String()).toList();
+
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('medications')
+          .doc(medicationId.toString())
+          .update({
+            'doseHistory': doseTimes,
+            'lastSyncedAt': DateTime.now().toIso8601String(),
+          });
+    } catch (e) {
+      debugPrint('Error syncing dose history: $e');
+      rethrow;
+    }
+  }
 }
+

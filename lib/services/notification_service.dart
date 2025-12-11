@@ -134,7 +134,7 @@ class NotificationService {
         await _scheduleNotification(
           id: notificationId++,
           title: 'Time to take your medication',
-          body: _buildNotificationBody(medicationName, dosing),
+          body: buildNotificationBody(medicationName, dosing),
           scheduledDate: nextDose,
         );
         doseCount++;
@@ -202,7 +202,7 @@ class NotificationService {
           await _scheduleNotification(
             id: notificationId++,
             title: 'Time to take your medication',
-            body: _buildNotificationBody(medicationName, dosing),
+            body: buildNotificationBody(medicationName, dosing),
             scheduledDate: scheduledDate,
           );
           scheduledCount++;
@@ -271,7 +271,7 @@ class NotificationService {
           await _scheduleNotification(
             id: notificationId++,
             title: 'Time to take your medication',
-            body: _buildNotificationBody(medicationName, dosing),
+            body: buildNotificationBody(medicationName, dosing),
             scheduledDate: scheduledDate,
           );
           scheduledCount++;
@@ -335,7 +335,21 @@ class NotificationService {
     debugPrint('Notification scheduled successfully with ID: $id');
   }
 
-  String _buildNotificationBody(String medicationName, String? dosing) {
+  Future<void> scheduleSingleNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+  }) async {
+    await _scheduleNotification(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+    );
+  }
+
+  String buildNotificationBody(String medicationName, String? dosing) {
     if (dosing != null && dosing.isNotEmpty) {
       return '$medicationName - $dosing';
     }

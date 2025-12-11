@@ -923,6 +923,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ],
+                      if (medication.pillCount != null) ...[
+                        const SizedBox(height: 4),
+                        Consumer<MedicationProvider>(
+                          builder: (context, provider, _) {
+                            final takenToday = provider.todayDoseCounts[medication.id] ?? 0;
+                            final remaining = medication.pillCount! - takenToday;
+                            return Text(
+                              'Pills remaining: $remaining/${medication.pillCount}',
+                              style: TextStyle(
+                                color: remaining <= 0 
+                                    ? const Color(0xFF2D9CDB)
+                                    : const Color(0xFF9B51E0),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ],
                   ),
                 ),
