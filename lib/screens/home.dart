@@ -8,8 +8,10 @@ import '../extensions/localization_extension.dart';
 import '../services/notification_service.dart';
 import '../providers/medication_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/sync_provider.dart';
 import 'account.dart';
 import 'login.dart';
+import 'sync_conflict_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -42,6 +44,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Refresh when returning from auth screens
+    setState(() {});
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _updateGreeting();
@@ -55,6 +64,47 @@ class _HomeScreenState extends State<HomeScreen> {
     // Load medications from database
     if (mounted) {
       await context.read<MedicationProvider>().loadMedications();
+      
+      // Check for sync if user is authenticated
+      final authProvider = context.read<AuthProvider>();
+      final syncProvider = context.read<SyncProvider>();
+      
+      if (authProvider.isAuthenticated && authProvider.isFirebaseEnabled) {
+        await _performSync(syncProvider);
+      }
+    }
+  }
+
+  Future<void> _performSync(SyncProvider syncProvider) async {
+    final hasInternet = await syncProvider.checkInternet();
+    if (!hasInternet) {
+      debugPrint('No internet connection, skipping sync');
+      return;
+    }
+
+    final medicationProvider = context.read<MedicationProvider>();
+    final success = await syncProvider.performSync(
+      medicationProvider.medications,
+      '',
+    );
+
+    if (!success && syncProvider.hasSyncConflicts && mounted) {
+      // Show conflict resolution screen
+      final result = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => SyncConflictScreen(
+            conflicts: syncProvider.conflicts,
+          ),
+        ),
+      );
+
+      if (result == true && mounted) {
+        // Sync was successful, refresh data
+        await medicationProvider.refreshMedications();
+      }
+    } else if (success && mounted) {
+      // Silent sync success
+      debugPrint('Sync completed successfully');
     }
   }
 

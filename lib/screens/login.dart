@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/medication_provider.dart';
+import '../providers/sync_provider.dart';
 import '../extensions/localization_extension.dart';
 import 'signup.dart';
 
@@ -33,8 +35,19 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (success && mounted) {
-        // Navigate back to home screen after successful login
-        Navigator.of(context).pop();
+        // Trigger sync after successful login to upload any local medications
+        final syncProvider = context.read<SyncProvider>();
+        final medicationProvider = context.read<MedicationProvider>();
+        
+        // Upload all local medications to Firestore
+        if (medicationProvider.medications.isNotEmpty) {
+          await syncProvider.triggerSync(medicationProvider.medications);
+        }
+        
+        // Navigate back to home screen after successful login, which will trigger refresh
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       } else if (mounted && authProvider.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

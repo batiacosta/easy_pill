@@ -3,10 +3,13 @@ import '../models/medication.dart';
 import '../models/scheduled_dose.dart';
 import '../services/database_service.dart';
 import '../services/notification_service.dart';
+import '../services/firestore_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MedicationProvider with ChangeNotifier {
   final DatabaseService _dbService = DatabaseService();
   final NotificationService _notificationService = NotificationService();
+  final FirestoreService _firestoreService = FirestoreService();
   
   List<Medication> _medications = [];
   Map<int, int> _todayDoseCounts = {};
@@ -224,6 +227,9 @@ class MedicationProvider with ChangeNotifier {
       _todayDoseCounts[savedMedication.id!] = 0;
       notifyListeners();
       
+      // Upload to Firestore if user is authenticated
+      await _syncMedicationToFirestore(savedMedication);
+      
       debugPrint('Medication added: ${savedMedication.name}');
       return savedMedication;
     } catch (e) {
@@ -243,6 +249,9 @@ class MedicationProvider with ChangeNotifier {
       
       // Delete from database
       await _dbService.deleteMedication(medicationId);
+      
+      // Delete from Firestore if user is authenticated
+      await _deleteMedicationFromFirestore(medication);
       
       // Remove from list
       _medications.removeWhere((m) => m.id == medicationId);
@@ -377,6 +386,9 @@ class MedicationProvider with ChangeNotifier {
         // Reschedule notifications
         await _rescheduleNotificationsForMedication(medication);
         
+        // Sync to Firestore if user is authenticated
+        await _syncMedicationToFirestore(medication);
+        
         notifyListeners();
         debugPrint('Medication updated: ${medication.name}');
       }
@@ -403,8 +415,52 @@ class MedicationProvider with ChangeNotifier {
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  // Helper: Sync medication to Firestore if authenticated
+  Future<void> _syncMedicationToFirestore(Medication medication) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await _firestoreService.uploadMedication(medication);
+        debugPrint('Medication synced to Firestore: ${medication.name}');
+      }
+    } catch (e) {
+      debugPrint('Error syncing to Firestore: $e');
+      // Don't throw - local operation should succeed even if sync fails
+    }
+  }
+
+  // Helper: Delete medication from Firestore if authenticated
+  Future<void> _deleteMedicationFromFirestore(Medication medication) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await _firestoreService.deleteMedication(medication);
+        debugPrint('Medication deleted from Firestore: ${medication.name}');
+      }
+    } catch (e) {
+      debugPrint('Error deleting from Firestore: $e');
+      // Don't throw - local operation should succeed even if sync fails
+    }
+  }
+
+  // Refresh medications from database (for syncing)
+  Future<void> refreshMedications() async {
+    _isLoading = true;
+    notifyListeners();
+    
+    try {
+      _medications = await _dbService.getAllMedications();
+      _todayDoseCounts = await _dbService.getTodayDoseCounts();
+      _skippedDoseKeys = await _dbService.getAllSkippedDoseKeys();
+      debugPrint('Refreshed ${_medications.length} medications');
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error refreshing medications: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }
+

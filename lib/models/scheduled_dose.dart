@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'medication.dart';
 
 class ScheduledDose {

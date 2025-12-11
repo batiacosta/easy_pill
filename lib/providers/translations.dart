@@ -68,6 +68,16 @@ const Map<String, Map<String, String>> translations = {
     'please_login': 'Please log in to continue',
     'logout': 'Log Out',
     'sync_your_data': 'Backup & sync pills',
+    // Sync
+    'sync_conflicts': 'Sync Conflicts',
+    'sync_complete': 'Sync completed successfully',
+    'apply_resolutions': 'Apply Resolutions',
+    'merge_strategy': 'Merge Both Versions',
+    'merge_description': 'Keep all data from both local and cloud',
+    'keep_online_strategy': 'Keep Cloud Version',
+    'keep_online_description': 'Replace local data with cloud data',
+    'keep_local_strategy': 'Keep Local Version',
+    'keep_local_description': 'Replace cloud data with local data',
   },
   'es': {
     'good_morning': 'Buenos Días',
@@ -138,5 +148,15 @@ const Map<String, Map<String, String>> translations = {
     'please_login': 'Por favor inicia sesión para continuar',
     'logout': 'Cerrar Sesión',
     'sync_your_data': 'Respaldar y sincronizar',
+    // Sync
+    'sync_conflicts': 'Conflictos de Sincronización',
+    'sync_complete': 'Sincronización completada exitosamente',
+    'apply_resolutions': 'Aplicar Resoluciones',
+    'merge_strategy': 'Fusionar Ambas Versiones',
+    'merge_description': 'Mantener todos los datos del dispositivo y la nube',
+    'keep_online_strategy': 'Mantener Versión en la Nube',
+    'keep_online_description': 'Reemplazar datos locales con datos de la nube',
+    'keep_local_strategy': 'Mantener Versión Local',
+    'keep_local_description': 'Reemplazar datos de la nube con datos locales',
   },
 };

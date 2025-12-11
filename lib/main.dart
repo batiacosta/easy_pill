@@ -4,10 +4,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'screens/home.dart';
-import 'screens/login.dart';
 import 'providers/localization_provider.dart';
 import 'providers/medication_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/sync_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +37,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LocalizationProvider()),
         ChangeNotifierProvider(create: (_) => MedicationProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => SyncProvider()),
       ],
       child: const MyApp(),
     ),

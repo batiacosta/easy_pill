@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/medication_provider.dart';
+import '../providers/sync_provider.dart';
 import '../extensions/localization_extension.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -38,9 +40,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       if (success && mounted) {
+        // Trigger sync after successful signup to upload any local medications
+        final syncProvider = context.read<SyncProvider>();
+        final medicationProvider = context.read<MedicationProvider>();
+        
+        // Upload all local medications to Firestore
+        if (medicationProvider.medications.isNotEmpty) {
+          await syncProvider.triggerSync(medicationProvider.medications);
+        }
+        
         // Pop back to login screen, then pop login to go to home
-        Navigator.of(context).pop(); // Close signup
-        Navigator.of(context).pop(); // Close login
+        if (mounted) {
+          Navigator.of(context).pop(); // Close signup
+          Navigator.of(context).pop(); // Close login, which will trigger home refresh
+        }
       } else if (mounted && authProvider.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

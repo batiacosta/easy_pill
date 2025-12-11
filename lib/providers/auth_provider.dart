@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthProvider extends ChangeNotifier {
   FirebaseAuth? _auth;
@@ -56,6 +57,11 @@ class AuthProvider extends ChangeNotifier {
       await userCredential.user?.updateDisplayName(displayName);
       await userCredential.user?.reload();
       _user = _auth!.currentUser;
+
+      // Create user document in Firestore
+      if (_user != null) {
+        await _createUserDocument(_user!.uid, displayName, email);
+      }
 
       _isLoading = false;
       notifyListeners();
@@ -151,6 +157,24 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  // Create user document in Firestore
+  Future<void> _createUserDocument(String uid, String displayName, String email) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      await firestore.collection('users').doc(uid).set({
+        'uid': uid,
+        'displayName': displayName,
+        'email': email,
+        'createdAt': DateTime.now().toIso8601String(),
+        'lastSyncedAt': DateTime.now().toIso8601String(),
+      });
+      debugPrint('User document created successfully for $uid');
+    } catch (e) {
+      debugPrint('Error creating user document: $e');
+      // Don't throw - user can still use the app even if Firestore fails
+    }
   }
 
   // Get user-friendly error messages
