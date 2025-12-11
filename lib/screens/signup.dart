@@ -38,8 +38,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       if (success && mounted) {
-        // Navigation handled by main.dart stream
-        Navigator.of(context).pop();
+        // Pop back to login screen, then pop login to go to home
+        Navigator.of(context).pop(); // Close signup
+        Navigator.of(context).pop(); // Close login
       } else if (mounted && authProvider.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -33,7 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (success && mounted) {
-        // Navigation handled by main.dart stream
+        // Navigate back to home screen after successful login
+        Navigator.of(context).pop();
       } else if (mounted && authProvider.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
