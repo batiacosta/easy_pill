@@ -50,11 +50,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<LocalizationProvider, AuthProvider>(
       builder: (context, localizationProvider, authProvider, _) {
-        // If Firebase is not configured, go directly to HomeScreen
-        final shouldShowAuth = authProvider.isFirebaseEnabled;
-        final initialScreen = shouldShowAuth 
-            ? (authProvider.isAuthenticated ? const HomeScreen() : const LoginScreen())
-            : const HomeScreen();
+        // Always start with HomeScreen - authentication is optional
+        // Users can sync data by tapping the "Sync your data?" button
         
         return MaterialApp(
           title: 'Easy Pill',
@@ -79,7 +76,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
           themeMode: ThemeMode.dark,
-          home: initialScreen,
+          home: const HomeScreen(),
         );
       },
     );

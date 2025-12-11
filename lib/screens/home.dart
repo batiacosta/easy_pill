@@ -9,6 +9,7 @@ import '../services/notification_service.dart';
 import '../providers/medication_provider.dart';
 import '../providers/auth_provider.dart';
 import 'account.dart';
+import 'login.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -332,20 +333,77 @@ class _HomeScreenState extends State<HomeScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Consumer<AuthProvider>(
-                                    builder: (context, authProvider, _) {
-                                      final userName = authProvider.isFirebaseEnabled 
-                                          ? (authProvider.user?.displayName ?? 'User')
-                                          : 'User';
-                                      return Text(
-                                        '$greeting, $userName',
-                                        style: const TextStyle(
-                                          color: Color(0xFFE0E0E0),
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.normal,
-                                        ),
-                                      );
-                                    },
+                                  Expanded(
+                                    child: Consumer<AuthProvider>(
+                                      builder: (context, authProvider, _) {
+                                        if (authProvider.isAuthenticated && authProvider.user != null) {
+                                          // User is authenticated - show name
+                                          final userName = authProvider.user!.displayName ?? 'User';
+                                          return Text(
+                                            '$greeting, $userName',
+                                            style: const TextStyle(
+                                              color: Color(0xFFE0E0E0),
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.normal,
+                                            ),
+                                          );
+                                        } else {
+                                          // Not authenticated - show sync prompt
+                                          return GestureDetector(
+                                            onTap: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (context) => const LoginScreen(),
+                                                ),
+                                              );
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    const Color(0xFF2D9CDB).withOpacity(0.15),
+                                                    const Color(0xFF2D9CDB).withOpacity(0.05),
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: const Color(0xFF2D9CDB).withOpacity(0.4),
+                                                  width: 1.5,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.cloud_sync_outlined,
+                                                    color: Color(0xFF2D9CDB),
+                                                    size: 18,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    context.tr('sync_your_data'),
+                                                    style: const TextStyle(
+                                                      color: Color(0xFF2D9CDB),
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  const Icon(
+                                                    Icons.arrow_forward_ios,
+                                                    color: Color(0xFF2D9CDB),
+                                                    size: 12,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                    ),
                                   ),
                                   Row(
                                     children: [
@@ -370,16 +428,35 @@ class _HomeScreenState extends State<HomeScreen> {
                                           }
                                         },
                                       ),
-                                      IconButton(
-                                        icon: const Icon(
-                                            Icons.account_circle_outlined,
-                                            color: Color(0xFFE0E0E0),
-                                            size: 28),
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (context) => const AccountScreen(),
+                                      Consumer<AuthProvider>(
+                                        builder: (context, authProvider, _) {
+                                          return IconButton(
+                                            icon: Icon(
+                                              authProvider.isAuthenticated 
+                                                  ? Icons.account_circle 
+                                                  : Icons.account_circle_outlined,
+                                              color: authProvider.isAuthenticated
+                                                  ? const Color(0xFF9B51E0)
+                                                  : const Color(0xFFE0E0E0),
+                                              size: 28,
                                             ),
+                                            onPressed: () {
+                                              if (authProvider.isAuthenticated) {
+                                                // Go to account screen
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (context) => const AccountScreen(),
+                                                  ),
+                                                );
+                                              } else {
+                                                // Go to login screen
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (context) => const LoginScreen(),
+                                                  ),
+                                                );
+                                              }
+                                            },
                                           );
                                         },
                                       ),

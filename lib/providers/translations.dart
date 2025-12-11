@@ -67,6 +67,7 @@ const Map<String, Map<String, String>> translations = {
     'passwords_dont_match': 'Passwords don\'t match',
     'please_login': 'Please log in to continue',
     'logout': 'Log Out',
+    'sync_your_data': 'Backup & sync pills',
   },
   'es': {
     'good_morning': 'Buenos Días',
@@ -136,5 +137,6 @@ const Map<String, Map<String, String>> translations = {
     'passwords_dont_match': 'Las contraseñas no coinciden',
     'please_login': 'Por favor inicia sesión para continuar',
     'logout': 'Cerrar Sesión',
+    'sync_your_data': 'Respaldar y sincronizar',
   },
 };
