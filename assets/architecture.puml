@@ -1,0 +1,116 @@
+@startuml EasyPill Architecture
+skinparam backgroundColor #1E1E1E
+skinparam classBackgroundColor #2C2C2E
+skinparam classBorderColor #9B51E0
+skinparam classFontColor #E0E0E0
+skinparam arrowColor #9B51E0
+skinparam packageBorderColor #2D9CDB
+skinparam packageFontColor #E0E0E0
+
+package "Models" {
+  class Medication {
+    +String id
+    +String name
+    +String? dosing
+    +String? description
+    +ScheduleType scheduleType
+    +int? interval
+    +List<TimeOfDay>? fixedTimes
+    +TimeOfDay? startTime
+    +int? pillCount
+  }
+  class MedicationItem {
+    +String id
+    +String name
+    +int? remaining
+  }
+  class ScheduledDose {
+    +String medicationId
+    +DateTime time
+    +bool taken
+  }
+  class SyncConflict {
+    +String medicationId
+    +Medication localMedication
+    +Medication cloudMedication
+    +ConflictResolutionStrategy resolutionStrategy
+  }
+}
+
+package "Providers" {
+  class AuthProvider {
+    +User? user
+    +Future<bool> signIn(email, password)
+    +Future<bool> signUp(email, password, name)
+    +Future<void> signOut()
+    +String? errorMessage
+  }
+  class MedicationProvider {
+    +List<Medication> medications
+    +Future<void> refreshMedications()
+    +Future<void> addMedication(medication)
+    +Future<void> updateMedication(medication)
+    +Future<void> removeMedication(id)
+  }
+  class SyncProvider {
+    +Future<void> triggerSync(List<Medication>)
+    +Future<bool> applyConflictResolutions(List<Medication>)
+  }
+  class LocalizationProvider {
+    +Locale locale
+    +String tr(key)
+    +void setLocale(locale)
+    +static supportedLocales
+  }
+}
+
+package "Screens" {
+  class HomeScreen
+  class LoginScreen
+  class SignUpScreen
+  class AccountScreen
+  class LocationsScreen
+  class SyncConflictScreen
+}
+
+package "Widgets" {
+  class AddMedicationModal
+  class MedicationCard
+  class MedicationSection
+  class CollapsibleMedicationSection
+  class MedicationOptionsSheet
+  class ScheduledDoseOptionsSheet
+  class HomeHeader
+  class ActionButton
+}
+
+package "Utilities" {
+  class AppColors
+  class LocalizationExtension
+  class InputFormatters
+}
+
+AuthProvider --> LocalizationProvider : uses
+LoginScreen --> AuthProvider : reads
+LoginScreen --> LocalizationProvider : tr()
+SignUpScreen --> AuthProvider : reads
+SignUpScreen --> LocalizationProvider : tr()
+AccountScreen --> AuthProvider : reads
+HomeScreen --> MedicationProvider : reads & writes
+HomeScreen --> SyncProvider : triggers sync
+AddMedicationModal --> Medication : creates/edits
+AddMedicationModal --> LocalizationProvider : tr()
+SyncConflictScreen --> SyncConflict : displays
+SyncConflictScreen --> SyncProvider : apply resolutions
+SyncConflictScreen --> MedicationProvider : refresh
+LocationsScreen --> LocalizationProvider : tr()
+
+MedicationProvider --> Medication : manages
+SyncProvider --> Medication : synchronizes
+SyncConflict --> Medication : local/cloud
+
+ActionButton ..> AppColors : styling
+Widgets ..> AppColors : styling
+Screens ..> Widgets : compose
+
+@enduml
