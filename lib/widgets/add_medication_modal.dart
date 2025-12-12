@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../extensions/localization_extension.dart';
 import '../models/medication.dart';
 import '../utilities/app_colors.dart';
+import '../utilities/input_formatters.dart';
 
 class AddMedicationModal extends StatefulWidget {
   final Medication? medicationToEdit;
@@ -288,6 +289,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                         controller: _pillCountController,
                         style: const TextStyle(color: AppColors.textPrimary),
                         keyboardType: TextInputType.number,
+                        inputFormatters: AppInputFormatters.digitsOnly,
                         decoration: InputDecoration(
                           hintText: context.tr('total_pills_hint'),
                           hintStyle: const TextStyle(color: AppColors.textSecondary),
@@ -358,6 +360,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                 controller: _intervalController,
                                 style: const TextStyle(color: AppColors.textPrimary),
                                 keyboardType: TextInputType.number,
+                                inputFormatters: AppInputFormatters.digitsOnly,
                                 textAlign: TextAlign.center,
                                 decoration: InputDecoration(
                                   filled: true,

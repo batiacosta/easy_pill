@@ -6,6 +6,7 @@ import '../providers/sync_provider.dart';
 import '../extensions/localization_extension.dart';
 import '../utilities/app_colors.dart';
 import '../widgets/action_button.dart';
+import '../utilities/input_formatters.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -147,6 +148,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    textCapitalization: TextCapitalization.none,
+                    inputFormatters: AppInputFormatters.email,
                     style: const TextStyle(color: AppColors.textPrimary),
                     decoration: InputDecoration(
                       labelText: context.tr('email'),
