@@ -23,7 +23,7 @@ class DatabaseService {
 
     return openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -66,6 +66,16 @@ class DatabaseService {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE taken_doses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        medication_id INTEGER NOT NULL,
+        scheduled_time TEXT NOT NULL,
+        taken_at TEXT NOT NULL,
+        FOREIGN KEY(medication_id) REFERENCES medications(id) ON DELETE CASCADE
+      )
+    ''');
+
     debugPrint('Database tables created');
   }
 
@@ -88,7 +98,22 @@ class DatabaseService {
       
       // Add start_time column if upgrading to version 3
       if (oldVersion < 3) {
-        await db.execute('ALTER TABLE medications ADD COLUMN start_time TEXT');
+        await db.execute('''
+          ALTER TABLE medications ADD COLUMN start_time TEXT
+        ''');
+      }
+      
+      // Add taken_doses table if upgrading to version 4
+      if (oldVersion < 4) {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS taken_doses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            medication_id INTEGER NOT NULL,
+            scheduled_time TEXT NOT NULL,
+            taken_at TEXT NOT NULL,
+            FOREIGN KEY(medication_id) REFERENCES medications(id) ON DELETE CASCADE
+          )
+        ''');
       }
     }
   }
@@ -355,12 +380,83 @@ class DatabaseService {
   Future<void> deleteAllData() async {
     try {
       final db = await database;
+      await db.delete('taken_doses');
       await db.delete('skipped_doses');
       await db.delete('dose_history');
       await db.delete('medications');
       debugPrint('All data deleted');
     } catch (e) {
       debugPrint('Error deleting all data: $e');
+      rethrow;
+    }
+  }
+
+  // Save a taken dose with its scheduled time
+  Future<void> saveTakenDose(int medicationId, DateTime scheduledTime) async {
+    try {
+      final db = await database;
+      await db.insert('taken_doses', {
+        'medication_id': medicationId,
+        'scheduled_time': scheduledTime.toIso8601String(),
+        'taken_at': DateTime.now().toIso8601String(),
+      });
+      debugPrint('Saved taken dose for medication ID: $medicationId at $scheduledTime');
+    } catch (e) {
+      debugPrint('Error saving taken dose: $e');
+      rethrow;
+    }
+  }
+
+  // Get all taken dose keys (medication_id_scheduledTime format)
+  Future<List<String>> getAllTakenDoseKeys() async {
+    try {
+      final db = await database;
+      final maps = await db.query('taken_doses');
+
+      return [
+        for (final map in maps)
+          '${map['medication_id']}_${map['scheduled_time']}',
+      ];
+    } catch (e) {
+      debugPrint('Error getting all taken dose keys: $e');
+      rethrow;
+    }
+  }
+
+  // Get taken doses for a specific day
+  Future<List<Map<String, dynamic>>> getTakenDosesForDay(DateTime day) async {
+    try {
+      final db = await database;
+      final startOfDay = DateTime(day.year, day.month, day.day).toIso8601String();
+      final endOfDay = DateTime(day.year, day.month, day.day, 23, 59, 59).toIso8601String();
+
+      final maps = await db.query(
+        'taken_doses',
+        where: 'scheduled_time BETWEEN ? AND ?',
+        whereArgs: [startOfDay, endOfDay],
+        orderBy: 'scheduled_time DESC',
+      );
+
+      return maps;
+    } catch (e) {
+      debugPrint('Error getting taken doses for day: $e');
+      rethrow;
+    }
+  }
+
+  // Clear old taken doses (older than specified days)
+  Future<void> clearOldTakenDoses(int daysToKeep) async {
+    try {
+      final db = await database;
+      final cutoffDate = DateTime.now().subtract(Duration(days: daysToKeep));
+      await db.delete(
+        'taken_doses',
+        where: 'taken_at < ?',
+        whereArgs: [cutoffDate.toIso8601String()],
+      );
+      debugPrint('Cleared taken doses older than $daysToKeep days');
+    } catch (e) {
+      debugPrint('Error clearing old taken doses: $e');
       rethrow;
     }
   }

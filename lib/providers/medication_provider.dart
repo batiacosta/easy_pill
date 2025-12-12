@@ -300,7 +300,10 @@ class MedicationProvider with ChangeNotifier {
       _todayDoseCounts = await _dbService.getTodayDoseCounts();
       _skippedDoseKeys = await _dbService.getAllSkippedDoseKeys();
       
-      // Clear taken doses from previous days
+      // Load taken doses from database
+      _takenDoseKeys = await _dbService.getAllTakenDoseKeys();
+      
+      // Clear taken doses from previous days (keep only today's)
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       _takenDoseKeys.removeWhere((key) {
@@ -318,7 +321,10 @@ class MedicationProvider with ChangeNotifier {
         return false;
       });
       
-      debugPrint('Loaded ${_medications.length} medications');
+      // Clean up old taken doses from database (keep last 7 days)
+      await _dbService.clearOldTakenDoses(7);
+      
+      debugPrint('Loaded ${_medications.length} medications and ${_takenDoseKeys.length} taken doses');
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading medications: $e');
@@ -408,6 +414,10 @@ class MedicationProvider with ChangeNotifier {
         );
         final key = '${medicationId}_${normalizedTime.toIso8601String()}';
         _takenDoseKeys.add(key);
+        
+        // Save to database
+        await _dbService.saveTakenDose(medicationId, normalizedTime);
+        
         debugPrint('Marked dose as taken: medicationId=$medicationId, time=$scheduledTime, normalizedKey=$key');
         debugPrint('All taken dose keys: $_takenDoseKeys');
       }
