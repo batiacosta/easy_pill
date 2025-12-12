@@ -105,7 +105,7 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Medication: ${conflict.localMedication.name}',
+                            '${localizationProvider.tr('medication')}: ${conflict.localMedication.name}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -114,7 +114,7 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Local and cloud versions differ',
+                            localizationProvider.tr('local_and_cloud_versions_differ'),
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 13,
@@ -124,8 +124,8 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
                           _buildStrategyOption(
                             localizationProvider,
                             ConflictResolutionStrategy.merge,
-                            'Merge Both Versions',
-                            'Keep all data from both local and cloud',
+                            localizationProvider.tr('merge_both_versions'),
+                            localizationProvider.tr('keep_all_data_both'),
                             Icons.merge,
                             strategy,
                             conflict.medicationId,
@@ -134,8 +134,8 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
                           _buildStrategyOption(
                             localizationProvider,
                             ConflictResolutionStrategy.keepOnline,
-                            'Keep Cloud Version',
-                            'Replace local data with cloud data',
+                            localizationProvider.tr('keep_cloud_version'),
+                            localizationProvider.tr('replace_local_with_cloud'),
                             Icons.cloud_download,
                             strategy,
                             conflict.medicationId,
@@ -144,8 +144,8 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
                           _buildStrategyOption(
                             localizationProvider,
                             ConflictResolutionStrategy.keepLocal,
-                            'Keep Local Version',
-                            'Replace cloud data with local data',
+                            localizationProvider.tr('keep_local_version'),
+                            localizationProvider.tr('replace_cloud_with_local'),
                             Icons.phone_android,
                             strategy,
                             conflict.medicationId,
