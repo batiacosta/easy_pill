@@ -26,17 +26,20 @@ class MedicationProvider with ChangeNotifier {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
-    final endDate = now.add(const Duration(days: 31));
+    final endDate = tomorrow.add(const Duration(days: 31));
     final List<ScheduledDose> scheduledDoses = [];
 
     for (final medication in _medications) {
       scheduledDoses.addAll(_calculateScheduledDoses(medication, tomorrow, endDate));
     }
 
-    // Filter out skipped doses
+    // Filter out skipped doses and any doses still from today
     scheduledDoses.removeWhere((dose) {
+      final doseDay = DateTime(dose.scheduledTime.year, dose.scheduledTime.month, dose.scheduledTime.day);
+      final isToday = doseDay.isAtSameMomentAs(today);
       final key = '${dose.medication.id}_${dose.scheduledTime.toIso8601String()}';
-      return _skippedDoseKeys.contains(key);
+      final isSkipped = _skippedDoseKeys.contains(key);
+      return isToday || isSkipped;
     });
 
     // Sort by scheduled time
