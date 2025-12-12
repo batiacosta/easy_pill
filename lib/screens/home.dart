@@ -1,3 +1,6 @@
+// Home screen: central dashboard for medications, doses, sync, and actions.
+// Shows today's pending/taken, scheduled doses, missed doses, and provides
+// add/edit/remove/skip actions. Integrates with Providers for data + sync.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +30,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Local UI state
   late String greeting;
   late String currentDate;
   bool _isScheduledExpanded = true; // Track if Scheduled section is expanded
@@ -46,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    // Prepare header info and initialize services/data
     currentDate = DateFormat('MMMM d').format(DateTime.now());
     _initializeApp();
     // Listen to auth changes to refresh content and notifications
@@ -79,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _initializeApp() async {
+    // Init notifications and request permissions, then load local meds
     final notificationService = NotificationService();
     await notificationService.initialize();
     await notificationService.requestPermissions();
@@ -98,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _performSync(SyncProvider syncProvider) async {
+    // Attempt cloud sync; on conflicts, push resolution screen
     final hasInternet = await syncProvider.checkInternet();
     if (!hasInternet) {
       debugPrint('No internet connection, skipping sync');
@@ -134,6 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _updateGreeting() {
+    // Simple time-based greeting using localization
     final hour = DateTime.now().hour;
 
     if (hour < 12) {
@@ -146,6 +154,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleAuthChange(AuthProvider authProvider) async {
+    // When auth state changes, refresh local meds, optionally pull remote,
+    // then perform sync and reschedule notifications.
     if (!mounted) return;
     final medicationProvider = context.read<MedicationProvider>();
     final syncProvider = context.read<SyncProvider>();
@@ -186,6 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String message,
     VoidCallback onConfirm,
   ) {
+    // Generic confirm dialog for destructive actions (delete/remove)
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -240,6 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showAddMedicationModal() async {
+    // Opens bottom sheet to add a new medication; persists via provider
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
@@ -292,6 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Medication medication,
     MedicationProvider provider,
   ) async {
+    // Opens bottom sheet to edit an existing medication; updates via provider
     // Capture scaffold before showing modal
     final scaffold = ScaffoldMessenger.of(context);
     
@@ -346,6 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
     BuildContext context,
     MedicationProvider provider,
   ) {
+    // Confirms clearing missed doses and shows feedback
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -398,6 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Main layout: header, pending/taken today, scheduled, missed, FAB
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -738,6 +753,7 @@ class _HomeScreenState extends State<HomeScreen> {
     MedicationProvider provider,
     {required bool takenToday, required bool dueToday}
   ) {
+    // Renders a single medication card with schedule info and action button.
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -903,6 +919,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _getScheduleText(Medication medication) {
+    // Returns a localized description for the medication schedule.
     switch (medication.scheduleType) {
       case ScheduleType.everyHours:
         return context.tr('schedule_every_hours', {
@@ -927,6 +944,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   bool _isDueToday(Medication medication) {
+    // Determines whether medication is due today based on schedule type.
     switch (medication.scheduleType) {
       case ScheduleType.everyHours:
         return true;
@@ -947,6 +965,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Medication medication,
     MedicationProvider provider,
   ) {
+    // Opens options bottom sheet for edit/remove actions.
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -977,6 +996,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSkipDoseDialog(BuildContext context, Medication medication, {DateTime? scheduledTime}) {
+    // Confirms skipping a dose and records it in provider.
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1046,6 +1066,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ScheduledDose dose,
     MedicationProvider provider,
   ) {
+    // Renders a scheduled dose entry with time badge and menu.
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -1138,6 +1159,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ScheduledDose dose,
     MedicationProvider provider,
   ) {
+    // Opens bottom sheet for scheduled dose actions.
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
