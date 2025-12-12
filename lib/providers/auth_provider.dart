@@ -156,7 +156,14 @@ class AuthProvider extends ChangeNotifier {
 
       try {
         final firestore = FirebaseFirestore.instance;
-        await firestore.collection('users').doc(uid).delete();
+        final userDocRef = firestore.collection('users').doc(uid);
+        await userDocRef.delete();
+
+        // Verify deletion and retry once if still present
+        final snapshot = await userDocRef.get();
+        if (snapshot.exists) {
+          await userDocRef.delete();
+        }
       } catch (e) {
         debugPrint('Error deleting Firestore user doc: $e');
       }
