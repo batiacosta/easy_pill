@@ -2,6 +2,36 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 
 class DirectionsService {
+  /// Launch using the platform default maps app without showing any selector.
+  /// On iOS: uses the `maps://` URL scheme (Apple Maps). On Android: `geo:` scheme.
+  static Future<void> launchDefaultMapsApp({
+    required double destinationLat,
+    required double destinationLng,
+    required String destinationName,
+  }) async {
+    try {
+      // iOS uses Apple Maps by default
+      final appleUrl = Uri.parse('maps://maps.apple.com/?daddr=$destinationLat,$destinationLng&q=$destinationName');
+      // Android geo intent (opens default maps app and shows native app sheet if multiple handlers)
+      final androidUrl = Uri.parse('geo:$destinationLat,$destinationLng?q=$destinationName');
+
+      // Try platform-specific first, then fallback to Google Maps web
+      if (await canLaunchUrl(appleUrl)) {
+        await launchUrl(appleUrl, mode: LaunchMode.externalApplication);
+        return;
+      }
+      if (await canLaunchUrl(androidUrl)) {
+        await launchUrl(androidUrl, mode: LaunchMode.externalApplication);
+        return;
+      }
+      final webFallback = Uri.parse('https://maps.google.com/?q=$destinationLat,$destinationLng');
+      if (await canLaunchUrl(webFallback)) {
+        await launchUrl(webFallback, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('Error launching default maps app: $e');
+    }
+  }
   static Future<void> launchDirections({
     required double destinationLat,
     required double destinationLng,
@@ -112,26 +142,15 @@ class DirectionsService {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Choose Navigation App',
+              'Open in Maps',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.map),
-              title: const Text('Google Maps'),
-              onTap: () => Navigator.pop(context, 'google_maps'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.navigation),
-              title: const Text('Waze'),
-              onTap: () => Navigator.pop(context, 'waze'),
-            ),
+            const SizedBox(height: 12),
             ListTile(
               leading: const Icon(Icons.location_on),
-              title: const Text('Default Maps App'),
+              title: const Text('Open default map app'),
               onTap: () => Navigator.pop(context, 'default'),
             ),
-            const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.close),
               title: const Text('Cancel'),
@@ -151,19 +170,12 @@ class DirectionsService {
     required String destinationName,
   }) async {
     final selectedApp = await showMapsSelector(context);
-    
-    if (selectedApp == null) return;
-
-    switch (selectedApp) {
-      case 'google_maps':
-        await _launchGoogleMaps(destinationLat, destinationLng, destinationName);
-        break;
-      case 'waze':
-        await _launchWaze(destinationLat, destinationLng);
-        break;
-      case 'default':
-        await _launchDefaultMaps(destinationLat, destinationLng, destinationName);
-        break;
+    if (selectedApp == 'default') {
+      await launchDefaultMapsApp(
+        destinationLat: destinationLat,
+        destinationLng: destinationLng,
+        destinationName: destinationName,
+      );
     }
   }
 }

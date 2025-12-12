@@ -367,26 +367,27 @@ class _LocationsScreenState extends State<LocationsScreen> {
               ),
             ],
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => DirectionsService.launchWithSelectedApp(
-                  context,
-                  destinationLat: location.latitude,
-                  destinationLng: location.longitude,
-                  destinationName: location.name,
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9B51E0),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => DirectionsService.launchDefaultMapsApp(
+                      destinationLat: location.latitude,
+                      destinationLng: location.longitude,
+                      destinationName: location.name,
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF9B51E0),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.directions, size: 18),
+                    label: const Text('Open in Maps'),
                   ),
                 ),
-                icon: const Icon(Icons.directions, size: 16),
-                label: const Text('Directions'),
-              ),
-            ),
           ],
         ),
       ),
@@ -446,8 +447,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
               child: ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pop(context);
-                  DirectionsService.launchWithSelectedApp(
-                    context,
+                  DirectionsService.launchDefaultMapsApp(
                     destinationLat: location.latitude,
                     destinationLng: location.longitude,
                     destinationName: location.name,
@@ -455,9 +455,12 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9B51E0),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 icon: const Icon(Icons.directions),
-                label: const Text('Get Directions'),
+                label: const Text('Open in Maps'),
               ),
             ),
           ],
