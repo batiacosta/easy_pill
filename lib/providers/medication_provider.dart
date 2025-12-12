@@ -20,16 +20,15 @@ class MedicationProvider with ChangeNotifier {
   Map<int, int> get todayDoseCounts => _todayDoseCounts;
   bool get isLoading => _isLoading;
 
-  // Get all scheduled doses for the next 31 days (excluding today)
+  // Get all scheduled doses for the next 31 days (including today)
   List<ScheduledDose> getScheduledDoses() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
     final endDate = now.add(const Duration(days: 31));
     final List<ScheduledDose> scheduledDoses = [];
 
     for (final medication in _medications) {
-      scheduledDoses.addAll(_calculateScheduledDoses(medication, tomorrow, endDate));
+      scheduledDoses.addAll(_calculateScheduledDoses(medication, now, endDate));
     }
 
     // Filter out skipped doses
@@ -117,14 +116,15 @@ class MedicationProvider with ChangeNotifier {
         if (medication.startTime != null) {
           // Use the specified start time
           var candidateTime = DateTime(now.year, now.month, now.day, medication.startTime!.hour, medication.startTime!.minute);
-          // If start time has already passed today, start from tomorrow
+          // If start time has already passed today, use current time + 1 minute for first dose
           if (candidateTime.isBefore(now)) {
-            candidateTime = candidateTime.add(const Duration(days: 1));
+            nextDose = now.add(const Duration(minutes: 1));
+          } else {
+            nextDose = candidateTime;
           }
-          nextDose = candidateTime;
         } else {
-          // Default: use current time rounded to the next hour or current time
-          nextDose = now;
+          // Default: use current time + 1 minute to ensure it's in the future
+          nextDose = now.add(const Duration(minutes: 1));
         }
         
         // Generate doses based on the interval
@@ -363,10 +363,9 @@ class MedicationProvider with ChangeNotifier {
     try {
       // Get the actual calculated doses for this medication
       final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
       final endDate = now.add(const Duration(days: 31));
       
-      final doses = _calculateScheduledDoses(medication, today, endDate);
+      final doses = _calculateScheduledDoses(medication, now, endDate);
       
       if (doses.isEmpty) {
         debugPrint('No doses to schedule for ${medication.name}');
