@@ -8,6 +8,7 @@ import '../services/notification_service.dart';
 import '../screens/login.dart';
 import '../screens/account.dart';
 import '../screens/locations.dart';
+import '../utilities/app_colors.dart';
 
 class HomeHeader extends StatelessWidget {
   final String greeting;
@@ -24,7 +25,7 @@ class HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF121212),
+      color: AppColors.background,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,7 +43,7 @@ class HomeHeader extends StatelessWidget {
                         return Text(
                           '$greeting, $userName',
                           style: const TextStyle(
-                            color: Color(0xFFE0E0E0),
+                            color: AppColors.textPrimary,
                             fontSize: 16,
                             fontWeight: FontWeight.normal,
                           ),
@@ -61,15 +62,15 @@ class HomeHeader extends StatelessWidget {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  const Color(0xFF2D9CDB).withOpacity(0.15),
-                                  const Color(0xFF2D9CDB).withOpacity(0.05),
+                                  AppColors.secondary.withOpacity(0.15),
+                                  AppColors.secondary.withOpacity(0.05),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: const Color(0xFF2D9CDB).withOpacity(0.4),
+                                color: AppColors.secondary.withOpacity(0.4),
                                 width: 1.5,
                               ),
                             ),
@@ -78,14 +79,14 @@ class HomeHeader extends StatelessWidget {
                               children: [
                                 const Icon(
                                   Icons.cloud_sync_outlined,
-                                  color: Color(0xFF2D9CDB),
+                                  color: AppColors.secondary,
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
                                   context.tr('sync_your_data'),
                                   style: const TextStyle(
-                                    color: Color(0xFF2D9CDB),
+                                    color: AppColors.secondary,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -93,7 +94,7 @@ class HomeHeader extends StatelessWidget {
                                 const SizedBox(width: 4),
                                 const Icon(
                                   Icons.arrow_forward_ios,
-                                  color: Color(0xFF2D9CDB),
+                                  color: AppColors.secondary,
                                   size: 12,
                                 ),
                               ],
@@ -112,7 +113,7 @@ class HomeHeader extends StatelessWidget {
                           return IconButton(
                             icon: const Icon(
                               Icons.sync,
-                              color: Color(0xFF2D9CDB),
+                              color: AppColors.secondary,
                               size: 28,
                             ),
                             tooltip: context.tr('sync_with_cloud'),
@@ -149,7 +150,7 @@ class HomeHeader extends StatelessWidget {
                     IconButton(
                       icon: const Icon(
                         Icons.location_on_outlined,
-                        color: Color(0xFFE0E0E0),
+                        color: AppColors.textPrimary,
                         size: 28,
                       ),
                       onPressed: () {
@@ -163,7 +164,7 @@ class HomeHeader extends StatelessWidget {
                     IconButton(
                       icon: const Icon(
                         Icons.notifications_outlined,
-                        color: Color(0xFFE0E0E0),
+                        color: AppColors.textPrimary,
                         size: 28,
                       ),
                       onPressed: () async {
@@ -186,8 +187,8 @@ class HomeHeader extends StatelessWidget {
                                 ? Icons.account_circle
                                 : Icons.account_circle_outlined,
                             color: authProvider.isAuthenticated
-                                ? const Color(0xFF9B51E0)
-                                : const Color(0xFFE0E0E0),
+                                ? AppColors.primary
+                                : AppColors.textPrimary,
                             size: 28,
                           ),
                           onPressed: () {
@@ -216,7 +217,7 @@ class HomeHeader extends StatelessWidget {
           Text(
             '${context.tr('today')}, $currentDate',
             style: const TextStyle(
-              color: Color(0xFFE0E0E0),
+              color: AppColors.textPrimary,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),

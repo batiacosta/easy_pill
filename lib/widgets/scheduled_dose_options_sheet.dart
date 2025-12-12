@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../extensions/localization_extension.dart';
 import '../models/scheduled_dose.dart';
 import '../providers/medication_provider.dart';
+import '../utilities/app_colors.dart';
 
 class ScheduledDoseOptionsSheet extends StatelessWidget {
   final ScheduledDose dose;
@@ -23,14 +24,14 @@ class ScheduledDoseOptionsSheet extends StatelessWidget {
     final provider = context.read<MedicationProvider>();
     return Container(
       padding: const EdgeInsets.all(16),
-      color: const Color(0xFF1E1E1E),
+      color: AppColors.surface,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             dose.medication.name,
             style: const TextStyle(
-              color: Color(0xFFE0E0E0),
+              color: AppColors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -39,17 +40,17 @@ class ScheduledDoseOptionsSheet extends StatelessWidget {
           Text(
             dose.formatDateTime(),
             style: const TextStyle(
-              color: Color(0xFF828282),
+              color: AppColors.textSecondary,
               fontSize: 14,
             ),
           ),
           const SizedBox(height: 16),
           // Mark as Taken
           ListTile(
-            leading: const Icon(Icons.check_circle_outline, color: Color(0xFF9B51E0)),
+            leading: const Icon(Icons.check_circle_outline, color: AppColors.primary),
             title: Text(
               context.trStatic('mark_as_taken'),
-              style: const TextStyle(color: Color(0xFF9B51E0)),
+              style: const TextStyle(color: AppColors.primary),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -57,44 +58,44 @@ class ScheduledDoseOptionsSheet extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('${dose.medication.name} marked as taken'),
-                  backgroundColor: const Color(0xFF9B51E0),
+                  backgroundColor: AppColors.primary,
                 ),
               );
             },
           ),
-          const Divider(color: Color(0xFF2C2C2C), height: 8),
+          const Divider(color: AppColors.surfaceAlt, height: 8),
           // Edit Medication
           ListTile(
-            leading: const Icon(Icons.edit_outlined, color: Color(0xFF2D9CDB)),
+            leading: const Icon(Icons.edit_outlined, color: AppColors.secondary),
             title: const Text(
               'Edit Medication',
-              style: TextStyle(color: Color(0xFF2D9CDB)),
+              style: TextStyle(color: AppColors.secondary),
             ),
             onTap: () {
               Navigator.pop(context);
               onEditMedication();
             },
           ),
-          const Divider(color: Color(0xFF2C2C2C), height: 8),
+          const Divider(color: AppColors.surfaceAlt, height: 8),
           // Skip Dose
           ListTile(
-            leading: const Icon(Icons.skip_next, color: Color(0xFF2D9CDB)),
+            leading: const Icon(Icons.skip_next, color: AppColors.secondary),
             title: Text(
               context.trStatic('skip_dose'),
-              style: const TextStyle(color: Color(0xFF2D9CDB)),
+              style: const TextStyle(color: AppColors.secondary),
             ),
             onTap: () {
               Navigator.pop(context);
               onSkipDose();
             },
           ),
-          const Divider(color: Color(0xFF2C2C2C), height: 8),
+          const Divider(color: AppColors.surfaceAlt, height: 8),
           // Remove Medication
           ListTile(
-            leading: const Icon(Icons.delete_outline, color: Color(0xFFEB5757)),
+            leading: const Icon(Icons.delete_outline, color: AppColors.danger),
             title: Text(
               context.trStatic('remove_medication'),
-              style: const TextStyle(color: Color(0xFFEB5757)),
+              style: const TextStyle(color: AppColors.danger),
             ),
             onTap: () {
               Navigator.pop(context);

@@ -17,6 +17,7 @@ import 'locations.dart';
 import '../widgets/home_header.dart';
 import '../widgets/medication_options_sheet.dart';
 import '../widgets/scheduled_dose_options_sheet.dart';
+import '../utilities/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,13 +34,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Color map for schedule types
   static const Map<ScheduleType, Color> scheduleTypeColors = {
-    ScheduleType.everyHours: Color(0xFF9B51E0),  // Purple (primary)
-    ScheduleType.fixedHours: Color(0xFF2D9CDB),  // Blue (secondary)
-    ScheduleType.everyDays: Color(0xFFEB5757),   // Red (tertiary)
+    ScheduleType.everyHours: AppColors.primary,  // Purple (primary)
+    ScheduleType.fixedHours: AppColors.secondary,  // Blue (secondary)
+    ScheduleType.everyDays: AppColors.danger,   // Red (tertiary)
   };
 
   Color getScheduleTypeColor(ScheduleType type) {
-    return scheduleTypeColors[type] ?? const Color(0xFF9B51E0);
+    return scheduleTypeColors[type] ?? AppColors.primary;
   }
 
   @override
@@ -189,11 +190,11 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
+          backgroundColor: AppColors.surface,
           title: Text(
             title,
             style: const TextStyle(
-              color: Color(0xFFE0E0E0),
+              color: AppColors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -201,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Text(
             message,
             style: const TextStyle(
-              color: Color(0xFF828282),
+              color: AppColors.textSecondary,
               fontSize: 16,
             ),
           ),
@@ -213,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 context.tr('cancel'),
                 style: const TextStyle(
-                  color: Color(0xFF9B51E0),
+                  color: AppColors.primary,
                   fontSize: 16,
                 ),
               ),
@@ -226,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 context.tr('delete'),
                 style: const TextStyle(
-                  color: Color(0xFFEB5757),
+                  color: AppColors.danger,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -268,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('${result['name']} added successfully'),
-              backgroundColor: const Color(0xFF9B51E0),
+              backgroundColor: AppColors.primary,
             ),
           );
         }
@@ -278,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Error adding medication'),
-              backgroundColor: Color(0xFFEB5757),
+              backgroundColor: AppColors.danger,
             ),
           );
         }
@@ -326,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
         scaffold.showSnackBar(
           SnackBar(
             content: Text('$medName updated successfully'),
-            backgroundColor: const Color(0xFF9B51E0),
+            backgroundColor: AppColors.primary,
           ),
         );
       } catch (e) {
@@ -334,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
         scaffold.showSnackBar(
           const SnackBar(
             content: Text('Error updating medication'),
-            backgroundColor: Color(0xFFEB5757),
+            backgroundColor: AppColors.danger,
           ),
         );
       }
@@ -348,11 +349,11 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: AppColors.surface,
         title: Text(
           'Clear Missed Doses',
           style: const TextStyle(
-            color: Color(0xFFE0E0E0),
+            color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -360,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
         content: const Text(
           'This will mark all missed doses as skipped. This action cannot be undone.',
           style: TextStyle(
-            color: Color(0xFF828282),
+            color: AppColors.textSecondary,
             fontSize: 14,
           ),
         ),
@@ -369,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               context.trStatic('cancel'),
-              style: const TextStyle(color: Color(0xFF828282)),
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
           TextButton(
@@ -380,14 +381,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Missed doses cleared'),
-                    backgroundColor: Color(0xFF9B51E0),
+                    backgroundColor: AppColors.primary,
                   ),
                 );
               }
             },
             child: Text(
               context.trStatic('clear'),
-              style: const TextStyle(color: Color(0xFFEB5757)),
+              style: const TextStyle(color: AppColors.danger),
             ),
           ),
         ],
@@ -398,7 +399,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Stack(
           children: [
@@ -407,7 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (medicationProvider.isLoading) {
                   return const Center(
                     child: CircularProgressIndicator(
-                      color: Color(0xFF9B51E0),
+                      color: AppColors.primary,
                     ),
                   );
                 }
@@ -452,13 +453,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                       const Icon(
                                         Icons.medication,
                                         size: 64,
-                                        color: Color(0xFF828282),
+                                        color: AppColors.textSecondary,
                                       ),
                                       const SizedBox(height: 16),
                                       Text(
                                         context.tr('no_medications'),
                                         style: TextStyle(
-                                          color: Color(0xFF828282),
+                                          color: AppColors.textSecondary,
                                           fontSize: 18,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -467,7 +468,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Text(
                                         context.tr('tap_to_add_first'),
                                         style: TextStyle(
-                                          color: Color(0xFF828282),
+                                          color: AppColors.textSecondary,
                                           fontSize: 14,
                                         ),
                                         textAlign: TextAlign.center,
@@ -485,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: Text(
                                       context.tr('today_section'),
                                       style: const TextStyle(
-                                        color: Color(0xFFE0E0E0),
+                                        color: AppColors.textPrimary,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -497,17 +498,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF1E1E1E),
+                                        color: AppColors.surface,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: const Color(0xFF2C2C2C),
+                                          color: AppColors.surfaceAlt,
                                           width: 1,
                                         ),
                                       ),
                                       child: Text(
                                         context.tr('all_caught_up'),
                                         style: TextStyle(
-                                          color: Color(0xFF828282),
+                                          color: AppColors.textSecondary,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -531,7 +532,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: Text(
                                       context.tr('taken_today_section'),
                                       style: const TextStyle(
-                                        color: Color(0xFFE0E0E0),
+                                        color: AppColors.textPrimary,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -543,17 +544,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF1E1E1E),
+                                        color: AppColors.surface,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: const Color(0xFF2C2C2C),
+                                          color: AppColors.surfaceAlt,
                                           width: 1,
                                         ),
                                       ),
                                       child: Text(
                                         context.tr('nothing_taken_yet'),
                                         style: TextStyle(
-                                          color: Color(0xFF828282),
+                                          color: AppColors.textSecondary,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -585,7 +586,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         Text(
                                           context.tr('scheduled_section'),
                                           style: const TextStyle(
-                                            color: Color(0xFFE0E0E0),
+                                            color: AppColors.textPrimary,
                                             fontSize: 16,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -594,7 +595,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           _isScheduledExpanded
                                               ? Icons.expand_less
                                               : Icons.expand_more,
-                                          color: const Color(0xFF828282),
+                                          color: AppColors.textSecondary,
                                         ),
                                       ],
                                     ),
@@ -606,17 +607,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                         width: double.infinity,
                                         padding: const EdgeInsets.all(16),
                                         decoration: BoxDecoration(
-                                        color: const Color(0xFF1E1E1E),
+                                        color: AppColors.surface,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: const Color(0xFF2C2C2C),
+                                          color: AppColors.surfaceAlt,
                                           width: 1,
                                         ),
                                       ),
                                       child: Text(
                                         context.tr('no_scheduled_doses'),
                                         style: TextStyle(
-                                          color: Color(0xFF828282),
+                                          color: AppColors.textSecondary,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -641,7 +642,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Text(
                                         context.tr('missed'),
                                         style: const TextStyle(
-                                          color: Color(0xFFE0E0E0),
+                                          color: AppColors.textPrimary,
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -663,7 +664,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ],
                                           icon: const Icon(
                                             Icons.more_vert,
-                                            color: Color(0xFF828282),
+                                            color: AppColors.textSecondary,
                                           ),
                                         ),
                                     ],
@@ -674,17 +675,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF1E1E1E),
+                                        color: AppColors.surface,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                          color: const Color(0xFF2C2C2C),
+                                          color: AppColors.surfaceAlt,
                                           width: 1,
                                         ),
                                       ),
                                       child: Text(
                                         context.tr('no_missed_doses'),
                                         style: TextStyle(
-                                          color: Color(0xFF828282),
+                                          color: AppColors.textSecondary,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -717,7 +718,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: FloatingActionButton.extended(
                 onPressed: _showAddMedicationModal,
                 elevation: 8,
-                backgroundColor: const Color(0xFF9B51E0),
+                backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -739,10 +740,10 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF2C2C2C),
+          color: AppColors.surfaceAlt,
           width: 1,
         ),
       ),
@@ -762,7 +763,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         medication.name,
                         style: const TextStyle(
-                          color: Color(0xFFE0E0E0),
+                          color: AppColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
@@ -774,7 +775,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           medication.dosing!,
                           style: const TextStyle(
-                            color: Color(0xFF828282),
+                            color: AppColors.textSecondary,
                             fontSize: 14,
                           ),
                         ),
@@ -792,8 +793,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               }),
                               style: TextStyle(
                                 color: remaining <= 0 
-                                    ? const Color(0xFF2D9CDB)
-                                    : const Color(0xFF9B51E0),
+                                    ? AppColors.secondary
+                                    : AppColors.primary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -806,7 +807,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.more_vert,
-                      color: Color(0xFF828282), size: 24),
+                      color: AppColors.textSecondary, size: 24),
                   onPressed: () => _showMedicationOptions(
                     context,
                     medication,
@@ -820,7 +821,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 medication.description!,
                 style: const TextStyle(
-                  color: Color(0xFF828282),
+                  color: AppColors.textSecondary,
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
                 ),
@@ -833,18 +834,18 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF2C2C2E),
+                color: AppColors.surfaceAlt2,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.schedule, color: Color(0xFF9B51E0), size: 16),
+                  const Icon(Icons.schedule, color: AppColors.primary, size: 16),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _getScheduleText(medication),
                       style: const TextStyle(
-                        color: Color(0xFFE0E0E0),
+                        color: AppColors.textPrimary,
                         fontSize: 12,
                       ),
                       maxLines: 1,
@@ -864,11 +865,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     : () => provider.recordDoseTaken(medication.id!),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: takenToday
-                      ? const Color(0xFF2D9CDB)
+                      ? AppColors.secondary
                       : getScheduleTypeColor(medication.scheduleType),
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFF2C2C2C),
-                  disabledForegroundColor: const Color(0xFF828282),
+                  disabledBackgroundColor: AppColors.surfaceAlt,
+                  disabledForegroundColor: AppColors.textSecondary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -948,7 +949,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: AppColors.surface,
       builder: (context) => MedicationOptionsSheet(
         medication: medication,
         onEdit: () => _showEditMedicationModal(context, medication, provider),
@@ -965,7 +966,7 @@ class _HomeScreenState extends State<HomeScreen> {
               scaffold.showSnackBar(
                 SnackBar(
                   content: Text('$medName removed'),
-                  backgroundColor: const Color(0xFFEB5757),
+                  backgroundColor: AppColors.danger,
                 ),
               );
             },
@@ -980,11 +981,11 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
+          backgroundColor: AppColors.surface,
           title: Text(
             context.trStatic('skip_dose'),
             style: const TextStyle(
-              color: Color(0xFFE0E0E0),
+              color: AppColors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -992,7 +993,7 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Text(
             'Skip this dose of ${medication.name}?',
             style: const TextStyle(
-              color: Color(0xFF828282),
+              color: AppColors.textSecondary,
               fontSize: 16,
             ),
           ),
@@ -1004,7 +1005,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 context.trStatic('cancel'),
                 style: const TextStyle(
-                  color: Color(0xFF9B51E0),
+                  color: AppColors.primary,
                   fontSize: 16,
                 ),
               ),
@@ -1021,14 +1022,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('${medication.name} dose skipped'),
-                    backgroundColor: const Color(0xFF2D9CDB),
+                    backgroundColor: AppColors.secondary,
                   ),
                 );
               },
               child: Text(
                 context.trStatic('skip_dose'),
                 style: const TextStyle(
-                  color: Color(0xFF2D9CDB),
+                  color: AppColors.secondary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1047,10 +1048,10 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF2C2C2C),
+          color: AppColors.surfaceAlt,
           width: 1,
         ),
       ),
@@ -1096,7 +1097,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     dose.medication.name,
                     style: const TextStyle(
-                      color: Color(0xFFE0E0E0),
+                      color: AppColors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1108,7 +1109,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       dose.medication.dosing!,
                       style: const TextStyle(
-                        color: Color(0xFF828282),
+                        color: AppColors.textSecondary,
                         fontSize: 14,
                       ),
                     ),
@@ -1119,7 +1120,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // Options menu
             IconButton(
               icon: const Icon(Icons.more_vert,
-                  color: Color(0xFF828282), size: 24),
+                  color: AppColors.textSecondary, size: 24),
               onPressed: () => _showScheduledDoseOptions(
                 context,
                 dose,
@@ -1139,7 +1140,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: AppColors.surface,
       builder: (context) => ScheduledDoseOptionsSheet(
         dose: dose,
         onEditMedication: () => _showEditMedicationModal(context, dose.medication, provider),
@@ -1156,7 +1157,7 @@ class _HomeScreenState extends State<HomeScreen> {
               scaffold.showSnackBar(
                 SnackBar(
                   content: Text('$medName removed'),
-                  backgroundColor: const Color(0xFFEB5757),
+                  backgroundColor: AppColors.danger,
                 ),
               );
             },
