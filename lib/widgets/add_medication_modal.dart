@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../extensions/localization_extension.dart';
 import '../models/medication.dart';
+import '../utilities/app_colors.dart';
 
 class AddMedicationModal extends StatefulWidget {
   final Medication? medicationToEdit;
@@ -86,10 +87,10 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF9B51E0),
+              primary: AppColors.primary,
               onPrimary: Colors.white,
-              surface: Color(0xFF1E1E1E),
-              onSurface: Color(0xFFE0E0E0),
+              surface: AppColors.surface,
+              onSurface: AppColors.textPrimary,
             ),
           ),
           child: child!,
@@ -111,10 +112,10 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.dark(
-              primary: Color(0xFF9B51E0),
+              primary: AppColors.primary,
               onPrimary: Colors.white,
-              surface: Color(0xFF1E1E1E),
-              onSurface: Color(0xFFE0E0E0),
+              surface: AppColors.surface,
+              onSurface: AppColors.textPrimary,
             ),
           ),
           child: child!,
@@ -158,7 +159,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF1E1E1E),
+        color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
@@ -184,13 +185,13 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                               ? 'Edit Medication'
                               : context.tr('add_medication'),
                           style: const TextStyle(
-                            color: Color(0xFFE0E0E0),
+                            color: AppColors.textPrimary,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Color(0xFF828282)),
+                          icon: const Icon(Icons.close, color: AppColors.textSecondary),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
@@ -201,7 +202,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                     Text(
                       context.tr('medication_name'),
                       style: const TextStyle(
-                        color: Color(0xFFE0E0E0),
+                        color: AppColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -209,12 +210,12 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _nameController,
-                      style: const TextStyle(color: Color(0xFFE0E0E0)),
+                      style: const TextStyle(color: AppColors.textPrimary),
                       decoration: InputDecoration(
                         hintText: context.tr('medication_name_hint'),
-                        hintStyle: const TextStyle(color: Color(0xFF828282)),
+                        hintStyle: const TextStyle(color: AppColors.textSecondary),
                         filled: true,
-                        fillColor: const Color(0xFF2C2C2E),
+                        fillColor: AppColors.surfaceAlt2,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -233,7 +234,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                     Text(
                       context.tr('dosing_optional'),
                       style: const TextStyle(
-                        color: Color(0xFFE0E0E0),
+                        color: AppColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -241,12 +242,12 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _dosingController,
-                      style: const TextStyle(color: Color(0xFFE0E0E0)),
+                      style: const TextStyle(color: AppColors.textPrimary),
                       decoration: InputDecoration(
                         hintText: context.tr('dosing_hint'),
-                        hintStyle: const TextStyle(color: Color(0xFF828282)),
+                        hintStyle: const TextStyle(color: AppColors.textSecondary),
                         filled: true,
-                        fillColor: const Color(0xFF2C2C2E),
+                        fillColor: AppColors.surfaceAlt2,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -267,15 +268,15 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                           },
                           fillColor: WidgetStateProperty.resolveWith((states) {
                             if (states.contains(WidgetState.selected)) {
-                              return const Color(0xFF9B51E0);
+                              return AppColors.primary;
                             }
-                            return const Color(0xFF2C2C2E);
+                            return AppColors.surfaceAlt2;
                           }),
                         ),
                         Text(
                           context.tr('limit_pill_count'),
                           style: const TextStyle(
-                            color: Color(0xFFE0E0E0),
+                            color: AppColors.textPrimary,
                             fontSize: 16,
                           ),
                         ),
@@ -285,13 +286,13 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _pillCountController,
-                        style: const TextStyle(color: Color(0xFFE0E0E0)),
+                        style: const TextStyle(color: AppColors.textPrimary),
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           hintText: context.tr('total_pills_hint'),
-                          hintStyle: const TextStyle(color: Color(0xFF828282)),
+                          hintStyle: const TextStyle(color: AppColors.textSecondary),
                           filled: true,
-                          fillColor: const Color(0xFF2C2C2E),
+                          fillColor: AppColors.surfaceAlt2,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -314,7 +315,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                     Text(
                       context.tr('schedule_type'),
                       style: const TextStyle(
-                        color: Color(0xFFE0E0E0),
+                        color: AppColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -325,7 +326,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                     RadioListTile<ScheduleType>(
                       title: Text(
                         context.tr('every_hours'),
-                        style: const TextStyle(color: Color(0xFFE0E0E0)),
+                        style: const TextStyle(color: AppColors.textPrimary),
                       ),
                       value: ScheduleType.everyHours,
                       groupValue: _scheduleType,
@@ -334,8 +335,8 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                           _scheduleType = value!;
                         });
                       },
-                      activeColor: const Color(0xFF9B51E0),
-                      tileColor: const Color(0xFF2C2C2E),
+                      activeColor: AppColors.primary,
+                      tileColor: AppColors.surfaceAlt2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -348,19 +349,19 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                           children: [
                             Text(
                               context.tr('every'),
-                              style: const TextStyle(color: Color(0xFFE0E0E0)),
+                              style: const TextStyle(color: AppColors.textPrimary),
                             ),
                             const SizedBox(width: 8),
                             SizedBox(
                               width: 80,
                               child: TextFormField(
                                 controller: _intervalController,
-                                style: const TextStyle(color: Color(0xFFE0E0E0)),
+                                style: const TextStyle(color: AppColors.textPrimary),
                                 keyboardType: TextInputType.number,
                                 textAlign: TextAlign.center,
                                 decoration: InputDecoration(
                                   filled: true,
-                                  fillColor: const Color(0xFF2C2C2E),
+                                  fillColor: AppColors.surfaceAlt2,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
                                     borderSide: BorderSide.none,
@@ -385,7 +386,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                             const SizedBox(width: 8),
                             Text(
                               context.tr('hours'),
-                              style: const TextStyle(color: Color(0xFFE0E0E0)),
+                              style: const TextStyle(color: AppColors.textPrimary),
                             ),
                           ],
                         ),
@@ -399,7 +400,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                             Text(
                               context.tr('starting_time'),
                               style: const TextStyle(
-                                color: Color(0xFFE0E0E0),
+                                color: AppColors.textPrimary,
                                 fontSize: 14,
                               ),
                             ),
@@ -409,7 +410,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                               child: Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF2C2C2E),
+                                  color: AppColors.surfaceAlt2,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
@@ -421,14 +422,14 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                           : context.tr('select_time'),
                                       style: TextStyle(
                                         color: _startTime != null
-                                            ? const Color(0xFFE0E0E0)
-                                            : const Color(0xFF828282),
+                                            ? AppColors.textPrimary
+                                            : AppColors.textSecondary,
                                         fontSize: 16,
                                       ),
                                     ),
                                     const Icon(
                                       Icons.access_time,
-                                      color: Color(0xFF9B51E0),
+                                      color: AppColors.primary,
                                     ),
                                   ],
                                 ),
@@ -440,8 +441,8 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                               child: ElevatedButton.icon(
                                 onPressed: () => _selectStartTime(),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2C2C2E),
-                                  foregroundColor: const Color(0xFF9B51E0),
+                                  backgroundColor: AppColors.surfaceAlt2,
+                                  foregroundColor: AppColors.primary,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -464,7 +465,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                     RadioListTile<ScheduleType>(
                       title: Text(
                         context.tr('fixed_hours'),
-                        style: const TextStyle(color: Color(0xFFE0E0E0)),
+                        style: const TextStyle(color: AppColors.textPrimary),
                       ),
                       value: ScheduleType.fixedHours,
                       groupValue: _scheduleType,
@@ -473,8 +474,8 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                           _scheduleType = value!;
                         });
                       },
-                      activeColor: const Color(0xFF9B51E0),
-                      tileColor: const Color(0xFF2C2C2E),
+                      activeColor: AppColors.primary,
+                      tileColor: AppColors.surfaceAlt2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -496,7 +497,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                         child: Container(
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF2C2C2E),
+                                            color: AppColors.surfaceAlt2,
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Row(
@@ -506,13 +507,13 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                               Text(
                                                 _fixedTimes[i].format(context),
                                                 style: const TextStyle(
-                                                  color: Color(0xFFE0E0E0),
+                                                  color: AppColors.textPrimary,
                                                   fontSize: 16,
                                                 ),
                                               ),
                                               const Icon(
                                                 Icons.access_time,
-                                                color: Color(0xFF9B51E0),
+                                                color: AppColors.primary,
                                               ),
                                             ],
                                           ),
@@ -524,7 +525,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                       IconButton(
                                         icon: const Icon(
                                           Icons.remove_circle,
-                                          color: Color(0xFFEB5757),
+                                          color: AppColors.danger,
                                         ),
                                         onPressed: () => _removeFixedTime(i),
                                       ),
@@ -536,8 +537,8 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                             ElevatedButton.icon(
                               onPressed: _addFixedTime,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2C2C2E),
-                                foregroundColor: const Color(0xFF9B51E0),
+                                backgroundColor: AppColors.surfaceAlt2,
+                                foregroundColor: AppColors.primary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -555,7 +556,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                     RadioListTile<ScheduleType>(
                       title: Text(
                         context.tr('every_days'),
-                        style: const TextStyle(color: Color(0xFFE0E0E0)),
+                        style: const TextStyle(color: AppColors.textPrimary),
                       ),
                       value: ScheduleType.everyDays,
                       groupValue: _scheduleType,
@@ -564,8 +565,8 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                           _scheduleType = value!;
                         });
                       },
-                      activeColor: const Color(0xFF9B51E0),
-                      tileColor: const Color(0xFF2C2C2E),
+                      activeColor: AppColors.primary,
+                      tileColor: AppColors.surfaceAlt2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -580,19 +581,19 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                               children: [
                                 Text(
                                   context.tr('every'),
-                                  style: const TextStyle(color: Color(0xFFE0E0E0)),
+                                  style: const TextStyle(color: AppColors.textPrimary),
                                 ),
                                 const SizedBox(width: 8),
                                 SizedBox(
                                   width: 80,
                                   child: TextFormField(
                                     controller: _intervalController,
-                                    style: const TextStyle(color: Color(0xFFE0E0E0)),
+                                    style: const TextStyle(color: AppColors.textPrimary),
                                     keyboardType: TextInputType.number,
                                     textAlign: TextAlign.center,
                                     decoration: InputDecoration(
                                       filled: true,
-                                      fillColor: const Color(0xFF2C2C2E),
+                                      fillColor: AppColors.surfaceAlt2,
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide.none,
@@ -617,7 +618,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                 const SizedBox(width: 8),
                                 Text(
                                   context.tr('days'),
-                                  style: const TextStyle(color: Color(0xFFE0E0E0)),
+                                  style: const TextStyle(color: AppColors.textPrimary),
                                 ),
                               ],
                             ),
@@ -625,7 +626,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                             Text(
                               context.tr('at_these_times'),
                               style: const TextStyle(
-                                color: Color(0xFF828282),
+                                color: AppColors.textSecondary,
                                 fontSize: 14,
                               ),
                             ),
@@ -641,7 +642,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                         child: Container(
                                           padding: const EdgeInsets.all(12),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF2C2C2E),
+                                            color: AppColors.surfaceAlt2,
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Row(
@@ -651,13 +652,13 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                               Text(
                                                 _fixedTimes[i].format(context),
                                                 style: const TextStyle(
-                                                  color: Color(0xFFE0E0E0),
+                                                  color: AppColors.textPrimary,
                                                   fontSize: 16,
                                                 ),
                                               ),
                                               const Icon(
                                                 Icons.access_time,
-                                                color: Color(0xFF9B51E0),
+                                                color: AppColors.primary,
                                               ),
                                             ],
                                           ),
@@ -669,7 +670,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                                       IconButton(
                                         icon: const Icon(
                                           Icons.remove_circle,
-                                          color: Color(0xFFEB5757),
+                                          color: AppColors.danger,
                                         ),
                                         onPressed: () => _removeFixedTime(i),
                                       ),
@@ -680,8 +681,8 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                             ElevatedButton.icon(
                               onPressed: _addFixedTime,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2C2C2E),
-                                foregroundColor: const Color(0xFF9B51E0),
+                                backgroundColor: AppColors.surfaceAlt2,
+                                foregroundColor: AppColors.primary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -699,7 +700,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                     Text(
                       context.tr('description_optional'),
                       style: const TextStyle(
-                        color: Color(0xFFE0E0E0),
+                        color: AppColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -707,13 +708,13 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _descriptionController,
-                      style: const TextStyle(color: Color(0xFFE0E0E0)),
+                      style: const TextStyle(color: AppColors.textPrimary),
                       maxLines: 3,
                       decoration: InputDecoration(
                         hintText: context.tr('description_hint'),
-                        hintStyle: const TextStyle(color: Color(0xFF828282)),
+                        hintStyle: const TextStyle(color: AppColors.textSecondary),
                         filled: true,
-                        fillColor: const Color(0xFF2C2C2E),
+                        fillColor: AppColors.surfaceAlt2,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -729,8 +730,8 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                           child: OutlinedButton(
                             onPressed: () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF828282),
-                              side: const BorderSide(color: Color(0xFF828282)),
+                              foregroundColor: AppColors.textSecondary,
+                              side: const BorderSide(color: AppColors.textSecondary),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -750,7 +751,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
                           child: ElevatedButton(
                             onPressed: _saveMedication,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF9B51E0),
+                              backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(

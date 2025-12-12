@@ -9,6 +9,8 @@ class AppColors {
   static const Color primary = Color(0xFF9B51E0); // purple
   static const Color secondary = Color(0xFF2D9CDB); // blue
   static const Color danger = Color(0xFFEB5757); // red
+  static const Color success = Color(0xFF27AE60); // green
+  static const Color warning = Color(0xFFFFC107); // amber
   static const Color textPrimary = Color(0xFFE0E0E0);
   static const Color textSecondary = Color(0xFF828282);
 }

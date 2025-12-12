@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../extensions/localization_extension.dart';
+import '../utilities/app_colors.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -9,20 +10,20 @@ class AccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: AppColors.background,
         elevation: 0,
         title: Text(
           'Account',
           style: const TextStyle(
-            color: Color(0xFFE0E0E0),
+            color: AppColors.textPrimary,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFE0E0E0)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -40,14 +41,14 @@ class AccountScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E1E),
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
                       children: [
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: const Color(0xFF9B51E0),
+                          backgroundColor: AppColors.primary,
                           child: Text(
                             user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
                             style: const TextStyle(
@@ -61,7 +62,7 @@ class AccountScreen extends StatelessWidget {
                         Text(
                           user?.displayName ?? 'User',
                           style: const TextStyle(
-                            color: Color(0xFFE0E0E0),
+                            color: AppColors.textPrimary,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
@@ -70,7 +71,7 @@ class AccountScreen extends StatelessWidget {
                         Text(
                           user?.email ?? '',
                           style: const TextStyle(
-                            color: Color(0xFF828282),
+                            color: AppColors.textSecondary,
                             fontSize: 16,
                           ),
                         ),
@@ -86,11 +87,11 @@ class AccountScreen extends StatelessWidget {
                         context: context,
                         builder: (BuildContext context) {
                           return AlertDialog(
-                            backgroundColor: const Color(0xFF1E1E1E),
+                            backgroundColor: AppColors.surface,
                             title: Text(
                               context.tr('logout'),
                               style: const TextStyle(
-                                color: Color(0xFFE0E0E0),
+                                color: AppColors.textPrimary,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -98,7 +99,7 @@ class AccountScreen extends StatelessWidget {
                             content: Text(
                               'Are you sure you want to log out?',
                               style: const TextStyle(
-                                color: Color(0xFF828282),
+                                color: AppColors.textSecondary,
                                 fontSize: 16,
                               ),
                             ),
@@ -109,7 +110,7 @@ class AccountScreen extends StatelessWidget {
                                 },
                                 child: Text(
                                   context.tr('cancel'),
-                                  style: const TextStyle(color: Color(0xFF828282)),
+                                  style: const TextStyle(color: AppColors.textSecondary),
                                 ),
                               ),
                               TextButton(
@@ -118,7 +119,7 @@ class AccountScreen extends StatelessWidget {
                                 },
                                 child: Text(
                                   context.tr('logout'),
-                                  style: const TextStyle(color: Color(0xFFEB5757)),
+                                  style: const TextStyle(color: AppColors.danger),
                                 ),
                               ),
                             ],
@@ -142,7 +143,7 @@ class AccountScreen extends StatelessWidget {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEB5757),
+                      backgroundColor: AppColors.danger,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(

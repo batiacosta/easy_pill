@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/medication_item.dart';
+import '../utilities/app_colors.dart';
 import 'medication_card.dart';
 
 class CollapsibleMedicationSection extends StatefulWidget {
@@ -45,7 +46,7 @@ class _CollapsibleMedicationSectionState extends State<CollapsibleMedicationSect
                 Text(
                   widget.title,
                   style: const TextStyle(
-                    color: Color(0xFFE0E0E0),
+                    color: AppColors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -53,7 +54,7 @@ class _CollapsibleMedicationSectionState extends State<CollapsibleMedicationSect
                 const SizedBox(width: 8),
                 Icon(
                   isExpanded ? Icons.expand_less : Icons.expand_more,
-                  color: const Color(0xFF9B51E0),
+                  color: AppColors.primary,
                   size: 24,
                 ),
               ],

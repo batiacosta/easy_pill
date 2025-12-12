@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/medication_item.dart';
 import '../extensions/localization_extension.dart';
+import '../utilities/app_colors.dart';
 
 class MedicationCard extends StatefulWidget {
   final MedicationItem medication;
@@ -27,10 +28,10 @@ class _MedicationCardState extends State<MedicationCard> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF2C2C2C),
+          color: AppColors.surfaceAlt,
           width: 1,
         ),
       ),
@@ -68,7 +69,7 @@ class _MedicationCardState extends State<MedicationCard> {
                               Text(
                                 widget.medication.name,
                                 style: const TextStyle(
-                                  color: Color(0xFFE0E0E0),
+                                  color: AppColors.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -79,7 +80,7 @@ class _MedicationCardState extends State<MedicationCard> {
                               Text(
                                 widget.medication.time,
                                 style: const TextStyle(
-                                  color: Color(0xFF828282),
+                                  color: AppColors.textSecondary,
                                   fontSize: 14,
                                   fontWeight: FontWeight.normal,
                                 ),
@@ -95,8 +96,8 @@ class _MedicationCardState extends State<MedicationCard> {
                   // More Options Button
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert,
-                        color: Color(0xFF828282), size: 24),
-                    color: const Color(0xFF2C2C2E),
+                        color: AppColors.textSecondary, size: 24),
+                    color: AppColors.surfaceAlt2,
                     onSelected: (value) {
                       if (value == 'mark_taken') {
                         widget.onMarkAsTaken();
@@ -112,7 +113,7 @@ class _MedicationCardState extends State<MedicationCard> {
                                 content: Text(
                                   'Skipped ${widget.medication.name}',
                                 ),
-                                backgroundColor: const Color(0xFFEB5757),
+                                backgroundColor: AppColors.danger,
                               ),
                             );
                           },
@@ -129,7 +130,7 @@ class _MedicationCardState extends State<MedicationCard> {
                                 content: Text(
                                   'Removed all scheduled doses of ${widget.medication.name}',
                                 ),
-                                backgroundColor: const Color(0xFFEB5757),
+                                backgroundColor: AppColors.danger,
                               ),
                             );
                           },
@@ -146,12 +147,12 @@ class _MedicationCardState extends State<MedicationCard> {
                             child: Row(
                               children: [
                                 const Icon(Icons.check_circle,
-                                    color: Color(0xFFE0E0E0), size: 20),
+                                    color: AppColors.textPrimary, size: 20),
                                 const SizedBox(width: 12),
                                 Text(
                                   context.tr('mark_as_taken'),
                                   style: const TextStyle(
-                                    color: Color(0xFFE0E0E0),
+                                    color: AppColors.textPrimary,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -167,12 +168,12 @@ class _MedicationCardState extends State<MedicationCard> {
                           child: Row(
                             children: [
                               const Icon(Icons.delete_outline,
-                                  color: Color(0xFFEB5757), size: 20),
+                                  color: AppColors.danger, size: 20),
                               const SizedBox(width: 12),
                               Text(
                                 context.tr('skip_dose'),
                                 style: const TextStyle(
-                                  color: Color(0xFFEB5757),
+                                  color: AppColors.danger,
                                   fontSize: 14,
                                 ),
                               ),
@@ -184,12 +185,12 @@ class _MedicationCardState extends State<MedicationCard> {
                           child: Row(
                             children: [
                               const Icon(Icons.delete_sweep,
-                                  color: Color(0xFFEB5757), size: 20),
+                                  color: AppColors.danger, size: 20),
                               const SizedBox(width: 12),
                               Text(
                                 context.tr('remove_medication'),
                                 style: const TextStyle(
-                                  color: Color(0xFFEB5757),
+                                  color: AppColors.danger,
                                   fontSize: 14,
                                 ),
                               ),
@@ -213,15 +214,15 @@ class _MedicationCardState extends State<MedicationCard> {
                       ? ElevatedButton.icon(
                           onPressed: null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2C2C2E),
-                            disabledForegroundColor: const Color(0xFF828282),
+                            backgroundColor: AppColors.surfaceAlt2,
+                            disabledForegroundColor: AppColors.textSecondary,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           icon: const Icon(Icons.check_circle,
-                              size: 20, color: Color(0xFF828282)),
+                              size: 20, color: AppColors.textSecondary),
                           label: Text(
                             context.tr('taken'),
                             style: const TextStyle(

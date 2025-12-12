@@ -8,6 +8,7 @@ import 'providers/localization_provider.dart';
 import 'providers/medication_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/sync_provider.dart';
+import 'utilities/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,17 +62,17 @@ class MyApp extends StatelessWidget {
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
-            scaffoldBackgroundColor: const Color(0xFF121212),
+            scaffoldBackgroundColor: AppColors.background,
             colorScheme: ColorScheme.dark(
-              primary: const Color(0xFF9B51E0),
-              secondary: const Color(0xFF2D9CDB),
-              tertiary: const Color(0xFFEB5757),
-              surface: const Color(0xFF1E1E1E),
-              onSurface: const Color(0xFFE0E0E0),
-              error: const Color(0xFFEB5757),
+              primary: AppColors.primary,
+              secondary: AppColors.secondary,
+              tertiary: AppColors.danger,
+              surface: AppColors.surface,
+              onSurface: AppColors.textPrimary,
+              error: AppColors.danger,
             ),
             appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFF121212),
+              backgroundColor: AppColors.background,
               elevation: 0,
               scrolledUnderElevation: 0,
             ),

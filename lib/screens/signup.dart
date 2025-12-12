@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import '../providers/medication_provider.dart';
 import '../providers/sync_provider.dart';
 import '../extensions/localization_extension.dart';
+import '../utilities/app_colors.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -58,7 +59,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(authProvider.errorMessage!),
-            backgroundColor: const Color(0xFFEB5757),
+            backgroundColor: AppColors.danger,
           ),
         );
       }
@@ -68,12 +69,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFE0E0E0)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -94,7 +95,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFE0E0E0),
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -103,7 +104,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 16,
-                      color: Color(0xFF828282),
+                      color: AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 48),
@@ -112,13 +113,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   TextFormField(
                     controller: _nameController,
                     keyboardType: TextInputType.name,
-                    style: const TextStyle(color: Color(0xFFE0E0E0)),
+                    style: const TextStyle(color: AppColors.textPrimary),
                     decoration: InputDecoration(
                       labelText: context.tr('name'),
-                      labelStyle: const TextStyle(color: Color(0xFF828282)),
-                      prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF828282)),
+                      labelStyle: const TextStyle(color: AppColors.textSecondary),
+                      prefixIcon: const Icon(Icons.person_outline, color: AppColors.textSecondary),
                       filled: true,
-                      fillColor: const Color(0xFF1E1E1E),
+                      fillColor: AppColors.surface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -129,7 +130,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF9B51E0)),
+                        borderSide: const BorderSide(color: AppColors.primary),
                       ),
                     ),
                     validator: (value) {
@@ -145,13 +146,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Color(0xFFE0E0E0)),
+                    style: const TextStyle(color: AppColors.textPrimary),
                     decoration: InputDecoration(
                       labelText: context.tr('email'),
-                      labelStyle: const TextStyle(color: Color(0xFF828282)),
-                      prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF828282)),
+                      labelStyle: const TextStyle(color: AppColors.textSecondary),
+                      prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textSecondary),
                       filled: true,
-                      fillColor: const Color(0xFF1E1E1E),
+                      fillColor: AppColors.surface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -162,7 +163,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF9B51E0)),
+                        borderSide: const BorderSide(color: AppColors.primary),
                       ),
                     ),
                     validator: (value) {
@@ -181,15 +182,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    style: const TextStyle(color: Color(0xFFE0E0E0)),
+                    style: const TextStyle(color: AppColors.textPrimary),
                     decoration: InputDecoration(
                       labelText: context.tr('password'),
-                      labelStyle: const TextStyle(color: Color(0xFF828282)),
-                      prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF828282)),
+                      labelStyle: const TextStyle(color: AppColors.textSecondary),
+                      prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          color: const Color(0xFF828282),
+                          color: AppColors.textSecondary,
                         ),
                         onPressed: () {
                           setState(() {
@@ -198,7 +199,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                       ),
                       filled: true,
-                      fillColor: const Color(0xFF1E1E1E),
+                      fillColor: AppColors.surface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -209,7 +210,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF9B51E0)),
+                        borderSide: const BorderSide(color: AppColors.primary),
                       ),
                     ),
                     validator: (value) {
@@ -228,15 +229,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: _obscureConfirmPassword,
-                    style: const TextStyle(color: Color(0xFFE0E0E0)),
+                    style: const TextStyle(color: AppColors.textPrimary),
                     decoration: InputDecoration(
                       labelText: context.tr('confirm_password'),
-                      labelStyle: const TextStyle(color: Color(0xFF828282)),
-                      prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF828282)),
+                      labelStyle: const TextStyle(color: AppColors.textSecondary),
+                      prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          color: const Color(0xFF828282),
+                          color: AppColors.textSecondary,
                         ),
                         onPressed: () {
                           setState(() {
@@ -245,7 +246,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                       ),
                       filled: true,
-                      fillColor: const Color(0xFF1E1E1E),
+                      fillColor: AppColors.surface,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -256,7 +257,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF9B51E0)),
+                        borderSide: const BorderSide(color: AppColors.primary),
                       ),
                     ),
                     validator: (value) {
@@ -277,7 +278,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return ElevatedButton(
                         onPressed: authProvider.isLoading ? null : _handleSignUp,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF9B51E0),
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(

@@ -4,6 +4,7 @@ import '../models/sync_conflict.dart';
 import '../providers/medication_provider.dart';
 import '../providers/sync_provider.dart';
 import '../providers/localization_provider.dart';
+import '../utilities/app_colors.dart';
 
 class SyncConflictScreen extends StatefulWidget {
   final List<SyncConflict> conflicts;
@@ -80,9 +81,9 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
       appBar: AppBar(
         title: Text(localizationProvider.tr('sync_conflicts')),
         elevation: 0,
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: AppColors.surface,
       ),
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: AppColors.background,
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -95,7 +96,7 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
                   final strategy = _resolutions[conflict.medicationId] ?? ConflictResolutionStrategy.merge;
 
                   return Card(
-                    color: const Color(0xFF1E1E1E),
+                    color: AppColors.surface,
                     margin: const EdgeInsets.only(bottom: 12),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -163,7 +164,7 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
                 icon: const Icon(Icons.check),
                 label: Text(localizationProvider.tr('apply_resolutions')),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9B51E0),
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
@@ -202,7 +203,7 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: isSelected ? const Color(0xFF9B51E0) : Colors.white12,
+          color: isSelected ? AppColors.primary : Colors.white12,
           width: isSelected ? 2 : 1,
         ),
         borderRadius: BorderRadius.circular(8),
@@ -217,8 +218,8 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
             });
           }
         },
-        activeColor: const Color(0xFF9B51E0),
-        tileColor: isSelected ? const Color(0xFF9B51E0).withOpacity(0.1) : null,
+        activeColor: AppColors.primary,
+        tileColor: isSelected ? AppColors.primary.withOpacity(0.1) : null,
         title: Text(
           title,
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
@@ -227,7 +228,7 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
           subtitle,
           style: TextStyle(color: Colors.white70, fontSize: 12),
         ),
-        secondary: Icon(icon, color: const Color(0xFF9B51E0)),
+        secondary: Icon(icon, color: AppColors.primary),
       ),
     );
   }

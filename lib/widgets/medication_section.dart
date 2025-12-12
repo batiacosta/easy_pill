@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/medication_item.dart';
+import '../utilities/app_colors.dart';
 import 'medication_card.dart';
 
 class MedicationSection extends StatelessWidget {
@@ -30,7 +31,7 @@ class MedicationSection extends StatelessWidget {
           child: Text(
             title,
             style: const TextStyle(
-              color: Color(0xFFE0E0E0),
+              color: AppColors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),

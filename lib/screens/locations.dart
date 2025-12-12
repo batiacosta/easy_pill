@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../services/location_service.dart';
 import '../services/directions_service.dart';
+import '../utilities/app_colors.dart';
 
 class LocationsScreen extends StatefulWidget {
   const LocationsScreen({Key? key}) : super(key: key);
@@ -115,12 +116,12 @@ class _LocationsScreenState extends State<LocationsScreen> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Nearby Hospitals & Pharmacies'),
-          backgroundColor: const Color(0xFF1E1E1E),
+          backgroundColor: AppColors.surface,
         ),
         body: const Center(
-          child: CircularProgressIndicator(color: Color(0xFF9B51E0)),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: AppColors.background,
       );
     }
 
@@ -128,30 +129,30 @@ class _LocationsScreenState extends State<LocationsScreen> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Nearby Hospitals & Pharmacies'),
-          backgroundColor: const Color(0xFF1E1E1E),
+          backgroundColor: AppColors.surface,
         ),
         body: Center(
           child: Text(
             _errorMessage!,
-            style: const TextStyle(color: Color(0xFFE0E0E0)),
+            style: const TextStyle(color: AppColors.textPrimary),
             textAlign: TextAlign.center,
           ),
         ),
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: AppColors.background,
       );
     }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nearby Hospitals & Pharmacies'),
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: AppColors.surface,
         elevation: 0,
       ),
       body: _currentPosition == null
           ? const Center(
               child: Text(
                 'Unable to load map',
-                style: TextStyle(color: Color(0xFFE0E0E0)),
+                style: TextStyle(color: AppColors.textPrimary),
               ),
             )
           : Stack(
@@ -185,7 +186,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                           height: 40,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: const Color(0xFF9B51E0),
+                              color: AppColors.primary,
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: Colors.white,
@@ -210,8 +211,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: location.type == 'hospital'
-                                      ? Colors.red
-                                      : Colors.green,
+                                      ? AppColors.danger
+                                      : AppColors.success,
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
@@ -242,7 +243,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                   left: 0,
                   right: 0,
                   child: Container(
-                    color: const Color(0xFF1E1E1E),
+                    color: AppColors.surface,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -251,7 +252,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                           height: 4,
                           margin: const EdgeInsets.only(top: 8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF828282),
+                            color: AppColors.textSecondary,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -280,14 +281,14 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 ),
               ],
             ),
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: AppColors.background,
     );
   }
 
   Widget _buildLocationCard(HealthLocation location, double distance) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      color: const Color(0xFF2C2C2E),
+      color: AppColors.surfaceAlt2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -308,8 +309,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                 ? Icons.local_hospital
                                 : Icons.local_pharmacy,
                             color: location.type == 'hospital'
-                                ? Colors.red
-                                : Colors.green,
+                                ? AppColors.danger
+                                : AppColors.success,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
@@ -317,7 +318,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                             child: Text(
                               location.name,
                               style: const TextStyle(
-                                color: Color(0xFFE0E0E0),
+                                color: AppColors.textPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -331,7 +332,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                       Text(
                         '${distance.toStringAsFixed(1)} km away',
                         style: const TextStyle(
-                          color: Color(0xFF9B51E0),
+                          color: AppColors.primary,
                           fontSize: 12,
                         ),
                       ),
@@ -341,12 +342,12 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 if (location.rating != null)
                   Row(
                     children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const Icon(Icons.star, color: AppColors.warning, size: 16),
                       const SizedBox(width: 4),
                       Text(
                         location.rating!.toStringAsFixed(1),
                         style: const TextStyle(
-                          color: Color(0xFFE0E0E0),
+                          color: AppColors.textPrimary,
                           fontSize: 12,
                         ),
                       ),
@@ -359,7 +360,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
               Text(
                 location.address!,
                 style: const TextStyle(
-                  color: Color(0xFF828282),
+                  color: AppColors.textSecondary,
                   fontSize: 12,
                 ),
                 maxLines: 1,
@@ -376,7 +377,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                       destinationName: location.name,
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF9B51E0),
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -399,7 +400,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
       context: context,
       builder: (context) => Container(
         padding: const EdgeInsets.all(16),
-        color: const Color(0xFF1E1E1E),
+        color: AppColors.surface,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,7 +408,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
             Text(
               location.name,
               style: const TextStyle(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -416,12 +417,12 @@ class _LocationsScreenState extends State<LocationsScreen> {
             if (location.address != null) ...[
               Row(
                 children: [
-                  const Icon(Icons.location_on, color: Color(0xFF9B51E0)),
+                  const Icon(Icons.location_on, color: AppColors.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       location.address!,
-                      style: const TextStyle(color: Color(0xFFE0E0E0)),
+                      style: const TextStyle(color: AppColors.textPrimary),
                     ),
                   ),
                 ],
@@ -431,11 +432,11 @@ class _LocationsScreenState extends State<LocationsScreen> {
             if (location.phone != null) ...[
               Row(
                 children: [
-                  const Icon(Icons.phone, color: Color(0xFF9B51E0)),
+                  const Icon(Icons.phone, color: AppColors.primary),
                   const SizedBox(width: 8),
                   Text(
                     location.phone!,
-                    style: const TextStyle(color: Color(0xFFE0E0E0)),
+                    style: const TextStyle(color: AppColors.textPrimary),
                   ),
                 ],
               ),
@@ -454,7 +455,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9B51E0),
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
