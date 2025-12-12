@@ -1,3 +1,5 @@
+// Account screen: displays basic user info and provides logout.
+// Reads AuthProvider for current user and performs sign-out.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -10,6 +12,7 @@ class AccountScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Layout: app bar, user info card (name/email), and logout button
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(

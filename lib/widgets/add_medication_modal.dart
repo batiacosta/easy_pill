@@ -1,3 +1,5 @@
+// Add/Edit Medication modal: bottom sheet to create or update a medication.
+// Handles fields for name, dosing, schedule type, interval/times, optional pill count and description.
 import 'package:flutter/material.dart';
 import '../extensions/localization_extension.dart';
 import '../models/medication.dart';
@@ -14,6 +16,7 @@ class AddMedicationModal extends StatefulWidget {
 }
 
 class _AddMedicationModalState extends State<AddMedicationModal> {
+  // Form controllers and local UI state for schedule/limits
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _dosingController = TextEditingController();
@@ -131,6 +134,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
   }
 
   void _saveMedication() {
+    // Validates and returns a map representing the medication to the parent.
     if (!_formKey.currentState!.validate()) return;
 
     // Parse interval only for the schedule types that require it
@@ -158,6 +162,7 @@ class _AddMedicationModalState extends State<AddMedicationModal> {
 
   @override
   Widget build(BuildContext context) {
+    // Structured form: header, core fields, schedule options, description, and action buttons.
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,

@@ -1,3 +1,5 @@
+// Sync Conflict screen: guides user through resolving local vs cloud differences.
+// Lets user choose per-medication strategies and applies resolutions via SyncProvider.
 import 'package:flutter/material.dart';
 import '../extensions/localization_extension.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +19,7 @@ class SyncConflictScreen extends StatefulWidget {
 }
 
 class _SyncConflictScreenState extends State<SyncConflictScreen> {
+  // Per-medication resolution choices
   late Map<String, ConflictResolutionStrategy> _resolutions;
 
   @override
@@ -29,6 +32,7 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
   }
 
   void _applyResolutions() async {
+    // Applies chosen strategies, refreshes local data, and navigates back to Home.
     final syncProvider = context.read<SyncProvider>();
     final medicationProvider = context.read<MedicationProvider>();
     final localizationProvider = context.read<LocalizationProvider>();

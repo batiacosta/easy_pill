@@ -1,3 +1,5 @@
+// Locations screen: shows nearby hospitals and pharmacies on a map.
+// Implements search, map interaction, and opening directions in maps.
 import 'package:flutter/material.dart';
 import '../extensions/localization_extension.dart';
 import 'package:flutter_map/flutter_map.dart';

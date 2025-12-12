@@ -1,3 +1,5 @@
+// Login screen: handles user authentication via AuthProvider.
+// Provides email/password inputs, validation, login action, and feedback.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -17,6 +19,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Form controllers and local UI state
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -30,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    // Validates form, performs sign-in, triggers optional sync, and navigates back.
     if (_formKey.currentState!.validate()) {
       final authProvider = context.read<AuthProvider>();
       final success = await authProvider.signIn(
@@ -64,6 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Layout: app bar, logo/title, inputs, and login button (with loading state)
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(

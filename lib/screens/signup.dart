@@ -1,3 +1,5 @@
+// Sign up screen: creates a new user account via AuthProvider.
+// Validates name/email/passwords, triggers optional sync, and navigates.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -16,6 +18,7 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  // Form controllers and local UI state
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -34,6 +37,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _handleSignUp() async {
+    // Validates form, performs sign-up, triggers optional sync, returns to home.
     if (_formKey.currentState!.validate()) {
       final authProvider = context.read<AuthProvider>();
       final success = await authProvider.signUp(
@@ -70,6 +74,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Layout: app bar, title/subtitle, fields for name/email/passwords, and sign-up button
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
