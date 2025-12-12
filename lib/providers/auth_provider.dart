@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/firestore_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   FirebaseAuth? _auth;
@@ -9,6 +10,7 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   bool _firebaseInitialized = false;
+  final FirestoreService _firestoreService = FirestoreService();
 
   User? get user => _user;
   bool get isLoading => _isLoading;
@@ -120,6 +122,69 @@ class AuthProvider extends ChangeNotifier {
     }
     _user = null;
     notifyListeners();
+  }
+
+  // Delete current user account
+  Future<bool> deleteAccount() async {
+    if (!_firebaseInitialized || _auth == null) {
+      _errorMessage = 'Firebase is not configured. Please run: flutterfire configure';
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final currentUser = _auth!.currentUser;
+      if (currentUser == null) {
+        _isLoading = false;
+        _errorMessage = 'No authenticated user';
+        notifyListeners();
+        return false;
+      }
+
+      final uid = currentUser.uid;
+
+      // Delete user-related Firestore data while authenticated
+      try {
+        await _firestoreService.deleteAllMedications();
+      } catch (e) {
+        debugPrint('Error deleting Firestore medications: $e');
+      }
+
+      try {
+        final firestore = FirebaseFirestore.instance;
+        await firestore.collection('users').doc(uid).delete();
+      } catch (e) {
+        debugPrint('Error deleting Firestore user doc: $e');
+      }
+
+      // Delete auth user (may require recent login)
+      await currentUser.delete();
+
+      // Sign out locally to clear state
+      await signOut();
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _isLoading = false;
+      if (e.code == 'requires-recent-login') {
+        _errorMessage = 'Please reauthenticate to delete your account';
+      } else {
+        _errorMessage = _getErrorMessage(e.code);
+      }
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'An unexpected error occurred';
+      notifyListeners();
+      return false;
+    }
   }
 
   // Reset password

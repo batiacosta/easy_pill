@@ -6,6 +6,10 @@ import '../providers/auth_provider.dart';
 import '../extensions/localization_extension.dart';
 import '../utilities/app_colors.dart';
 import '../widgets/action_button.dart';
+import '../services/database_service.dart';
+import '../providers/medication_provider.dart';
+import '../providers/sync_provider.dart';
+import 'home.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -19,7 +23,7 @@ class AccountScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         title: Text(
-          'Account',
+          context.tr('account'),
           style: const TextStyle(
             color: AppColors.textPrimary,
             fontSize: 20,
@@ -103,7 +107,7 @@ class AccountScreen extends StatelessWidget {
                               ),
                             ),
                             content: Text(
-                              'Are you sure you want to log out?',
+                              context.tr('confirm_logout'),
                               style: const TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 16,
@@ -137,6 +141,95 @@ class AccountScreen extends StatelessWidget {
                         await authProvider.signOut();
                         if (context.mounted) {
                           Navigator.of(context).pop();
+                        }
+                      }
+                    },
+                    backgroundColor: AppColors.danger,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Delete Account Button
+                  ActionButton(
+                    text: context.tr('delete_account'),
+                    icon: Icons.delete_forever,
+                    onPressed: () async {
+                      final shouldDelete = await showDialog<bool>(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            backgroundColor: AppColors.surface,
+                            title: Text(
+                              context.tr('delete_account'),
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            content: Text(
+                              context.tr('confirm_delete_account'),
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 16,
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(false);
+                                },
+                                child: Text(
+                                  context.tr('cancel'),
+                                  style: const TextStyle(color: AppColors.textSecondary),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(true);
+                                },
+                                child: Text(
+                                  context.tr('delete'),
+                                  style: const TextStyle(color: AppColors.danger),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (shouldDelete == true && context.mounted) {
+                        final success = await authProvider.deleteAccount();
+                        if (!success) {
+                          final error = authProvider.errorMessage ?? context.tr('invalid');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(error)),
+                            );
+                          }
+                          return;
+                        }
+
+                        // Clear local database after successful deletion
+                        final db = DatabaseService();
+                        await db.deleteAllData();
+
+                        // Reset local providers and notifications
+                        if (context.mounted) {
+                          final medicationProvider = context.read<MedicationProvider>();
+                          await medicationProvider.refreshMedications();
+                          await medicationProvider.rescheduleAllNotifications();
+
+                          final syncProvider = context.read<SyncProvider>();
+                          syncProvider.clearSyncState();
+                        }
+
+                        if (context.mounted) {
+                          // Replace the entire stack with a fresh HomeScreen
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            (route) => false,
+                          );
                         }
                       }
                     },

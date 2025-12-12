@@ -1,5 +1,9 @@
 const Map<String, Map<String, String>> translations = {
   'en': {
+    'account': 'Account',
+    'confirm_logout': 'Are you sure you want to log out?',
+    'delete_account': 'Delete Account',
+    'confirm_delete_account': 'Delete your account and clear local data? This cannot be undone.',
     'good_morning': 'Good Morning',
     'good_afternoon': 'Good Afternoon',
     'good_evening': 'Good Evening',
@@ -105,6 +109,10 @@ const Map<String, Map<String, String>> translations = {
     'schedule_every_days_at': 'Every {days} days at {times}',
   },
   'es': {
+    'account': 'Cuenta',
+    'confirm_logout': '¿Seguro que deseas cerrar sesión?',
+    'delete_account': 'Eliminar Cuenta',
+    'confirm_delete_account': '¿Eliminar tu cuenta y borrar datos locales? Esto no se puede deshacer.',
     'good_morning': 'Buenos Días',
     'good_afternoon': 'Buenas Tardes',
     'good_evening': 'Buenas Noches',
