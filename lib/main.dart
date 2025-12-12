@@ -12,7 +12,7 @@ import 'utilities/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Load environment variables
   try {
     await dotenv.load(fileName: ".env");
@@ -20,7 +20,7 @@ void main() async {
   } catch (e) {
     debugPrint('Failed to load .env file: $e');
   }
-  
+
   // Try to initialize Firebase, but continue if it fails
   try {
     await Firebase.initializeApp(
@@ -29,9 +29,10 @@ void main() async {
     debugPrint('Firebase initialized successfully');
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
-    debugPrint('App will run without authentication. Make sure .env file exists with your Firebase credentials');
+    debugPrint(
+        'App will run without authentication. Make sure .env file exists with your Firebase credentials');
   }
-  
+
   runApp(
     MultiProvider(
       providers: [
@@ -54,7 +55,7 @@ class MyApp extends StatelessWidget {
       builder: (context, localizationProvider, authProvider, _) {
         // Always start with HomeScreen - authentication is optional
         // Users can sync data by tapping the "Sync your data?" button
-        
+
         return MaterialApp(
           title: 'Easy Pill',
           locale: localizationProvider.locale,
