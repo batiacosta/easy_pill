@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../extensions/localization_extension.dart';
 import 'package:provider/provider.dart';
 import '../models/sync_conflict.dart';
 import '../providers/medication_provider.dart';
@@ -65,7 +66,7 @@ class _SyncConflictScreenState extends State<SyncConflictScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${context.tr('error')}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );

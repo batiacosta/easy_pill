@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../extensions/localization_extension.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
@@ -115,7 +116,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Nearby Hospitals & Pharmacies'),
+          title: Text(context.tr('nearby_hospitals_and_pharmacies')),
           backgroundColor: AppColors.surface,
         ),
         body: const Center(
@@ -128,7 +129,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     if (_errorMessage != null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Nearby Hospitals & Pharmacies'),
+          title: Text(context.tr('nearby_hospitals_and_pharmacies')),
           backgroundColor: AppColors.surface,
         ),
         body: Center(
@@ -144,7 +145,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nearby Hospitals & Pharmacies'),
+        title: Text(context.tr('nearby_hospitals_and_pharmacies')),
         backgroundColor: AppColors.surface,
         elevation: 0,
       ),
@@ -386,7 +387,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                       ),
                     ),
                     icon: const Icon(Icons.directions, size: 18),
-                    label: const Text('Open in Maps'),
+                    label: Text(context.tr('open_in_maps')),
                   ),
                 ),
           ],
@@ -461,7 +462,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 icon: const Icon(Icons.directions),
-                label: const Text('Open in Maps'),
+                label: Text(context.tr('open_in_maps')),
               ),
             ),
           ],
