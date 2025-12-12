@@ -13,6 +13,7 @@ import '../providers/sync_provider.dart';
 import 'account.dart';
 import 'login.dart';
 import 'sync_conflict_screen.dart';
+import 'locations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -511,6 +512,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   Row(
                                     children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.location_on_outlined,
+                                            color: Color(0xFFE0E0E0),
+                                            size: 28),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) => const LocationsScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
                                       IconButton(
                                         icon: const Icon(
                                             Icons.notifications_outlined,
