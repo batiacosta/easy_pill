@@ -10,7 +10,7 @@ Pill tracker built with Flutter. Supports local use out of the box and optional 
 
 ## Quick start
 ```bash
-git clone <repo-url>
+git clone https://github.com/batiacosta/easy_pill.git
 cd easy_pill
 flutter pub get
 flutter run            # picks a connected device or emulator
