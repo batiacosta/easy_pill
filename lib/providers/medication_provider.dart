@@ -20,15 +20,16 @@ class MedicationProvider with ChangeNotifier {
   Map<int, int> get todayDoseCounts => _todayDoseCounts;
   bool get isLoading => _isLoading;
 
-  // Get all scheduled doses for the next 31 days (including today)
+  // Get all scheduled doses for the next 31 days (from tomorrow onwards)
   List<ScheduledDose> getScheduledDoses() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
     final endDate = now.add(const Duration(days: 31));
     final List<ScheduledDose> scheduledDoses = [];
 
     for (final medication in _medications) {
-      scheduledDoses.addAll(_calculateScheduledDoses(medication, now, endDate));
+      scheduledDoses.addAll(_calculateScheduledDoses(medication, tomorrow, endDate));
     }
 
     // Filter out skipped doses
@@ -42,7 +43,7 @@ class MedicationProvider with ChangeNotifier {
     return scheduledDoses;
   }
 
-  // Get all doses scheduled for today
+  // Get all doses scheduled for today (pending only - not taken yet)
   List<ScheduledDose> getTodayDoses() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -50,7 +51,12 @@ class MedicationProvider with ChangeNotifier {
     final List<ScheduledDose> todayDoses = [];
 
     for (final medication in _medications) {
-      todayDoses.addAll(_calculateScheduledDoses(medication, today, tomorrow));
+      // Only include if no doses taken yet today
+      final takenCount = _todayDoseCounts[medication.id] ?? 0;
+      if (takenCount == 0) {
+        // Use 'now' as start to get remaining doses for today
+        todayDoses.addAll(_calculateScheduledDoses(medication, now, tomorrow));
+      }
     }
 
     // Filter out skipped doses
@@ -62,6 +68,31 @@ class MedicationProvider with ChangeNotifier {
     // Sort by scheduled time
     todayDoses.sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
     return todayDoses;
+  }
+
+  // Get all doses taken today (for the Taken Today section)
+  List<ScheduledDose> getTakenTodayDoses() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final List<ScheduledDose> takenDoses = [];
+
+    for (final medication in _medications) {
+      // Only include if at least one dose was taken today
+      final takenCount = _todayDoseCounts[medication.id] ?? 0;
+      if (takenCount > 0) {
+        // Get all doses for today (from start of day)
+        final doses = _calculateScheduledDoses(medication, today, tomorrow);
+        // We'll just show the first scheduled dose as representative
+        if (doses.isNotEmpty) {
+          takenDoses.add(doses.first);
+        }
+      }
+    }
+
+    // Sort by medication name
+    takenDoses.sort((a, b) => a.medication.name.compareTo(b.medication.name));
+    return takenDoses;
   }
 
 

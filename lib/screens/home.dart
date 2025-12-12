@@ -13,6 +13,7 @@ import '../services/firestore_service.dart';
 import '../providers/medication_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/sync_provider.dart';
+import '../providers/localization_provider.dart';
 import 'account.dart';
 import 'login.dart';
 import 'sync_conflict_screen.dart';
@@ -20,6 +21,9 @@ import 'locations.dart';
 import '../widgets/home_header.dart';
 import '../widgets/medication_options_sheet.dart';
 import '../widgets/scheduled_dose_options_sheet.dart';
+import '../widgets/today_dose_card.dart';
+import '../widgets/scheduled_dose_card.dart';
+import '../widgets/taken_dose_card.dart';
 import '../utilities/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -429,15 +433,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
 
                 final medications = medicationProvider.medications;
-                final todayCounts = medicationProvider.todayDoseCounts;
+                final todayDoses = medicationProvider.getTodayDoses();
+                final takenTodayDoses = medicationProvider.getTakenTodayDoses();
                 final scheduledDoses = medicationProvider.getScheduledDoses();
-
-                final pendingToday = medications
-                    .where((m) => _isDueToday(m) && (todayCounts[m.id] ?? 0) == 0)
-                    .toList();
-                final takenToday = medications
-                    .where((m) => _isDueToday(m) && (todayCounts[m.id] ?? 0) > 0)
-                    .toList();
 
                 return SingleChildScrollView(
                   child: Column(
@@ -495,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             else
                               Column(
                                 children: [
-                                  // Pending today
+                                  // Today's doses
                                   Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
@@ -508,7 +506,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 12),
-                                  if (pendingToday.isEmpty)
+                                  if (todayDoses.isEmpty)
                                     Container(
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(16),
@@ -529,15 +527,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     )
                                   else
-                                    for (final med in pendingToday)
+                                    for (final dose in todayDoses)
                                       Padding(
                                         padding: const EdgeInsets.only(bottom: 12),
-                                        child: _buildMedicationCard(
-                                          context,
-                                          med,
-                                          medicationProvider,
-                                          takenToday: false,
-                                          dueToday: true,
+                                        child: TodayDoseCard(
+                                          dose: dose,
+                                          provider: medicationProvider,
+                                          getScheduleTypeColor: getScheduleTypeColor,
+                                          onMorePressed: () => _showMedicationOptions(context, dose.medication, medicationProvider),
                                         ),
                                       ),
 
@@ -554,7 +551,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 12),
-                                  if (takenToday.isEmpty)
+                                  if (takenTodayDoses.isEmpty)
                                     Container(
                                       width: double.infinity,
                                       padding: const EdgeInsets.all(16),
@@ -575,15 +572,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     )
                                   else
-                                    for (final med in takenToday)
+                                    for (final dose in takenTodayDoses)
                                       Padding(
                                         padding: const EdgeInsets.only(bottom: 12),
-                                        child: _buildMedicationCard(
-                                          context,
-                                          med,
-                                          medicationProvider,
-                                          takenToday: true,
-                                          dueToday: true,
+                                        child: TakenDoseCard(
+                                          dose: dose,
                                         ),
                                       ),
 
@@ -641,10 +634,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                       for (final dose in scheduledDoses)
                                         Padding(
                                           padding: const EdgeInsets.only(bottom: 12),
-                                          child: _buildScheduledDoseCard(
-                                            context,
-                                            dose,
-                                            medicationProvider,
+                                          child: ScheduledDoseCard(
+                                            dose: dose,
+                                            getScheduleTypeColor: getScheduleTypeColor,
+                                            onMorePressed: () => _showScheduledDoseOptions(context, dose, medicationProvider),
                                           ),
                                         ),
                                   ],
@@ -709,10 +702,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                     for (final dose in medicationProvider.getMissedDoses())
                                       Padding(
                                         padding: const EdgeInsets.only(bottom: 12),
-                                        child: _buildScheduledDoseCard(
-                                          context,
-                                          dose,
-                                          medicationProvider,
+                                        child: ScheduledDoseCard(
+                                          dose: dose,
+                                          getScheduleTypeColor: getScheduleTypeColor,
+                                          onMorePressed: () => _showScheduledDoseOptions(context, dose, medicationProvider),
                                         ),
                                       ),
                                 ],
@@ -1058,99 +1051,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildScheduledDoseCard(
-    BuildContext context,
-    ScheduledDose dose,
-    MedicationProvider provider,
-  ) {
-    // Renders a scheduled dose entry with time badge and menu.
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.surfaceAlt,
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Time badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: getScheduleTypeColor(dose.medication.scheduleType),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    dose.formatDate(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    dose.formatTimeWithPeriod(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Medication info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    dose.medication.name,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (dose.medication.dosing != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      dose.medication.dosing!,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            // Options menu
-            IconButton(
-              icon: const Icon(Icons.more_vert,
-                  color: AppColors.textSecondary, size: 24),
-              onPressed: () => _showScheduledDoseOptions(
-                context,
-                dose,
-                provider,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
