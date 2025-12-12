@@ -101,16 +101,18 @@ class MedicationProvider with ChangeNotifier {
           // Only include doses from today
           final doseDay = DateTime(scheduledTime.year, scheduledTime.month, scheduledTime.day);
           if (doseDay.isAtSameMomentAs(today)) {
-            // Find the medication
-            final medication = _medications.firstWhere(
-              (m) => m.id == medicationId,
-              orElse: () => throw Exception('Medication not found'),
+            // Find the medication (skip if not found - medication may have been deleted)
+            final medication = _medications.cast<Medication?>().firstWhere(
+              (m) => m?.id == medicationId,
+              orElse: () => null,
             );
             
-            takenDoses.add(ScheduledDose(
-              medication: medication,
-              scheduledTime: scheduledTime,
-            ));
+            if (medication != null) {
+              takenDoses.add(ScheduledDose(
+                medication: medication,
+                scheduledTime: scheduledTime,
+              ));
+            }
           }
         } catch (e) {
           debugPrint('Error parsing taken dose key: $key - $e');
@@ -375,6 +377,13 @@ class MedicationProvider with ChangeNotifier {
       // Remove from list
       _medications.removeWhere((m) => m.id == medicationId);
       _todayDoseCounts.remove(medicationId);
+      
+      // Clean up taken dose keys for this medication
+      _takenDoseKeys.removeWhere((key) => key.startsWith('${medicationId}_'));
+      
+      // Clean up skipped dose keys for this medication
+      _skippedDoseKeys.removeWhere((key) => key.startsWith('${medicationId}_'));
+      
       notifyListeners();
       
       debugPrint('Medication deleted: ${medication.name}');
@@ -400,7 +409,7 @@ class MedicationProvider with ChangeNotifier {
         final key = '${medicationId}_${normalizedTime.toIso8601String()}';
         _takenDoseKeys.add(key);
         debugPrint('Marked dose as taken: medicationId=$medicationId, time=$scheduledTime, normalizedKey=$key');
-        debugPrint('Total taken doses: ${_takenDoseKeys.length}');
+        debugPrint('All taken dose keys: $_takenDoseKeys');
       }
       
       // Record in database
