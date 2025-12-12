@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../extensions/localization_extension.dart';
 import '../utilities/app_colors.dart';
+import '../widgets/action_button.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -81,7 +82,9 @@ class AccountScreen extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   // Logout Button
-                  ElevatedButton.icon(
+                  ActionButton(
+                    text: context.tr('logout'),
+                    icon: Icons.logout,
                     onPressed: () async {
                       final shouldLogout = await showDialog<bool>(
                         context: context,
@@ -134,23 +137,7 @@ class AccountScreen extends StatelessWidget {
                         }
                       }
                     },
-                    icon: const Icon(Icons.logout),
-                    label: Text(
-                      context.tr('logout'),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.danger,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
+                    backgroundColor: AppColors.danger,
                   ),
                 ],
               ),

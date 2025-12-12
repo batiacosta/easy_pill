@@ -5,6 +5,7 @@ import '../providers/medication_provider.dart';
 import '../providers/sync_provider.dart';
 import '../extensions/localization_extension.dart';
 import '../utilities/app_colors.dart';
+import '../widgets/action_button.dart';
 import 'signup.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -195,33 +196,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Login Button
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
-                      return ElevatedButton(
-                        onPressed: authProvider.isLoading ? null : _handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: authProvider.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : Text(
-                                context.tr('login'),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                      return ActionButton(
+                        text: context.tr('login'),
+                        onPressed: _handleLogin,
+                        backgroundColor: AppColors.primary,
+                        isLoading: authProvider.isLoading,
                       );
                     },
                   ),
