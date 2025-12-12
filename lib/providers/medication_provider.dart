@@ -14,6 +14,7 @@ class MedicationProvider with ChangeNotifier {
   List<Medication> _medications = [];
   Map<int, int> _todayDoseCounts = {};
   Set<String> _skippedDoseKeys = {};
+  List<String> _takenDoseKeys = []; // Changed to List to allow duplicates
   bool _isLoading = false;
 
   List<Medication> get medications => _medications;
@@ -51,18 +52,26 @@ class MedicationProvider with ChangeNotifier {
     final List<ScheduledDose> todayDoses = [];
 
     for (final medication in _medications) {
-      // Only include if no doses taken yet today
-      final takenCount = _todayDoseCounts[medication.id] ?? 0;
-      if (takenCount == 0) {
-        // Use 'now' as start to get remaining doses for today
-        todayDoses.addAll(_calculateScheduledDoses(medication, now, tomorrow));
-      }
+      // Use 'now' as start to get remaining doses for today
+      todayDoses.addAll(_calculateScheduledDoses(medication, now, tomorrow));
     }
 
-    // Filter out skipped doses
+    // Filter out skipped and taken doses
     todayDoses.removeWhere((dose) {
-      final key = '${dose.medication.id}_${dose.scheduledTime.toIso8601String()}';
-      return _skippedDoseKeys.contains(key);
+      // Normalize to minute precision for key matching
+      final normalizedTime = DateTime(
+        dose.scheduledTime.year,
+        dose.scheduledTime.month,
+        dose.scheduledTime.day,
+        dose.scheduledTime.hour,
+        dose.scheduledTime.minute,
+      );
+      final key = '${dose.medication.id}_${normalizedTime.toIso8601String()}';
+      final isFiltered = _skippedDoseKeys.contains(key) || _takenDoseKeys.contains(key);
+      if (isFiltered) {
+        debugPrint('Filtering dose: ${dose.medication.name} at ${dose.scheduledTime} (key: $key)');
+      }
+      return isFiltered;
     });
 
     // Sort by scheduled time
@@ -77,21 +86,37 @@ class MedicationProvider with ChangeNotifier {
     final tomorrow = today.add(const Duration(days: 1));
     final List<ScheduledDose> takenDoses = [];
 
-    for (final medication in _medications) {
-      // Only include if at least one dose was taken today
-      final takenCount = _todayDoseCounts[medication.id] ?? 0;
-      if (takenCount > 0) {
-        // Get all doses for today (from start of day)
-        final doses = _calculateScheduledDoses(medication, today, tomorrow);
-        // We'll just show the first scheduled dose as representative
-        if (doses.isNotEmpty) {
-          takenDoses.add(doses.first);
+    // For each taken dose key, create a ScheduledDose object
+    for (final key in _takenDoseKeys) {
+      final parts = key.split('_');
+      if (parts.length >= 2) {
+        try {
+          final medicationId = int.parse(parts[0]);
+          final dateStr = parts.sublist(1).join('_');
+          final scheduledTime = DateTime.parse(dateStr);
+          
+          // Only include doses from today
+          final doseDay = DateTime(scheduledTime.year, scheduledTime.month, scheduledTime.day);
+          if (doseDay.isAtSameMomentAs(today)) {
+            // Find the medication
+            final medication = _medications.firstWhere(
+              (m) => m.id == medicationId,
+              orElse: () => throw Exception('Medication not found'),
+            );
+            
+            takenDoses.add(ScheduledDose(
+              medication: medication,
+              scheduledTime: scheduledTime,
+            ));
+          }
+        } catch (e) {
+          debugPrint('Error parsing taken dose key: $key - $e');
         }
       }
     }
 
-    // Sort by medication name
-    takenDoses.sort((a, b) => a.medication.name.compareTo(b.medication.name));
+    // Sort by scheduled time (most recent first)
+    takenDoses.sort((a, b) => b.scheduledTime.compareTo(a.scheduledTime));
     return takenDoses;
   }
 
@@ -269,6 +294,25 @@ class MedicationProvider with ChangeNotifier {
       _medications = await _dbService.getAllMedications();
       _todayDoseCounts = await _dbService.getTodayDoseCounts();
       _skippedDoseKeys = await _dbService.getAllSkippedDoseKeys();
+      
+      // Clear taken doses from previous days
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      _takenDoseKeys.removeWhere((key) {
+        final parts = key.split('_');
+        if (parts.length >= 2) {
+          try {
+            final dateStr = parts.sublist(1).join('_');
+            final doseTime = DateTime.parse(dateStr);
+            final doseDay = DateTime(doseTime.year, doseTime.month, doseTime.day);
+            return doseDay.isBefore(today);
+          } catch (e) {
+            return false;
+          }
+        }
+        return false;
+      });
+      
       debugPrint('Loaded ${_medications.length} medications');
       notifyListeners();
     } catch (e) {
@@ -338,8 +382,24 @@ class MedicationProvider with ChangeNotifier {
   }
 
   // Record dose taken and recalculate notifications
-  Future<void> recordDoseTaken(int medicationId) async {
+  Future<void> recordDoseTaken(int medicationId, {DateTime? scheduledTime}) async {
     try {
+      // Track this specific dose as taken
+      if (scheduledTime != null) {
+        // Normalize to minute precision for key matching
+        final normalizedTime = DateTime(
+          scheduledTime.year,
+          scheduledTime.month,
+          scheduledTime.day,
+          scheduledTime.hour,
+          scheduledTime.minute,
+        );
+        final key = '${medicationId}_${normalizedTime.toIso8601String()}';
+        _takenDoseKeys.add(key);
+        debugPrint('Marked dose as taken: medicationId=$medicationId, time=$scheduledTime, normalizedKey=$key');
+        debugPrint('Total taken doses: ${_takenDoseKeys.length}');
+      }
+      
       // Record in database
       await _dbService.recordDoseTaken(medicationId);
       

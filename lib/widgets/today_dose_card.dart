@@ -148,7 +148,7 @@ class TodayDoseCard extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  await provider.recordDoseTaken(medication.id!);
+                  await provider.recordDoseTaken(medication.id!, scheduledTime: dose.scheduledTime);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
