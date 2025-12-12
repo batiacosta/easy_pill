@@ -78,6 +78,31 @@ const Map<String, Map<String, String>> translations = {
     'keep_online_description': 'Replace local data with cloud data',
     'keep_local_strategy': 'Keep Local Version',
     'keep_local_description': 'Replace cloud data with local data',
+    // Home - Sync and notifications
+    'syncing': 'Syncing…',
+    'sync_failed': 'Sync failed: {error}',
+    'test_notification_scheduled': 'Test notification scheduled for 5 seconds from now',
+    'sync_with_cloud': 'Sync with cloud',
+    'user': 'User',
+    // Home - Empty states and sections
+    'no_medications': 'No medications yet',
+    'tap_to_add_first': 'Tap the + button to add your first medication',
+    'today_section': 'Today',
+    'all_caught_up': 'All caught up for today!'
+    ,
+    'taken_today_section': 'Taken Today',
+    'nothing_taken_yet': 'Nothing marked as taken yet.',
+    'scheduled_section': 'Scheduled',
+    'no_scheduled_doses': 'No scheduled doses.',
+    'no_missed_doses': 'No missed doses.',
+    // Home - Buttons and labels
+    'taken_today_label': 'Taken today',
+    'not_due_today': 'Not due today',
+    'pills_remaining': 'Pills remaining: {remaining}/{total}',
+    // Schedules
+    'schedule_every_hours': 'Every {hours} hours',
+    'schedule_daily_at': 'Daily at {times}',
+    'schedule_every_days_at': 'Every {days} days at {times}',
   },
   'es': {
     'good_morning': 'Buenos Días',
@@ -158,5 +183,29 @@ const Map<String, Map<String, String>> translations = {
     'keep_online_description': 'Reemplazar datos locales con datos de la nube',
     'keep_local_strategy': 'Mantener Versión Local',
     'keep_local_description': 'Reemplazar datos de la nube con datos locales',
+    // Home - Sync and notifications
+    'syncing': 'Sincronizando…',
+    'sync_failed': 'Sincronización fallida: {error}',
+    'test_notification_scheduled': 'Notificación de prueba programada para dentro de 5 segundos',
+    'sync_with_cloud': 'Sincronizar con la nube',
+    'user': 'Usuario',
+    // Home - Empty states and sections
+    'no_medications': 'Aún no hay medicamentos',
+    'tap_to_add_first': 'Toca el botón + para añadir tu primer medicamento',
+    'today_section': 'Hoy',
+    'all_caught_up': '¡Todo al día por hoy!',
+    'taken_today_section': 'Tomados Hoy',
+    'nothing_taken_yet': 'Nada marcado como tomado todavía.',
+    'scheduled_section': 'Programado',
+    'no_scheduled_doses': 'No hay dosis programadas.',
+    'no_missed_doses': 'No hay dosis olvidadas.',
+    // Home - Buttons and labels
+    'taken_today_label': 'Tomado hoy',
+    'not_due_today': 'No corresponde hoy',
+    'pills_remaining': 'Pastillas restantes: {remaining}/{total}',
+    // Schedules
+    'schedule_every_hours': 'Cada {hours} horas',
+    'schedule_daily_at': 'Diariamente a las {times}',
+    'schedule_every_days_at': 'Cada {days} días a las {times}',
   },
 };

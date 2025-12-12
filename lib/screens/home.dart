@@ -14,6 +14,9 @@ import 'account.dart';
 import 'login.dart';
 import 'sync_conflict_screen.dart';
 import 'locations.dart';
+import '../widgets/home_header.dart';
+import '../widgets/medication_options_sheet.dart';
+import '../widgets/scheduled_dose_options_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -423,177 +426,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 return SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Header
-                      Container(
-                        color: const Color(0xFF121212),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Greeting and Notification
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Consumer<AuthProvider>(
-                                      builder: (context, authProvider, _) {
-                                        if (authProvider.isAuthenticated && authProvider.user != null) {
-                                          // User is authenticated - show name
-                                          final userName = authProvider.user!.displayName ?? 'User';
-                                          return Text(
-                                            '$greeting, $userName',
-                                            style: const TextStyle(
-                                              color: Color(0xFFE0E0E0),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                          );
-                                        } else {
-                                          // Not authenticated - show sync prompt
-                                          return GestureDetector(
-                                            onTap: () {
-                                              Navigator.of(context).push(
-                                                MaterialPageRoute(
-                                                  builder: (context) => const LoginScreen(),
-                                                ),
-                                              );
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: [
-                                                    const Color(0xFF2D9CDB).withOpacity(0.15),
-                                                    const Color(0xFF2D9CDB).withOpacity(0.05),
-                                                  ],
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                ),
-                                                borderRadius: BorderRadius.circular(20),
-                                                border: Border.all(
-                                                  color: const Color(0xFF2D9CDB).withOpacity(0.4),
-                                                  width: 1.5,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Icon(
-                                                    Icons.cloud_sync_outlined,
-                                                    color: Color(0xFF2D9CDB),
-                                                    size: 18,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    context.tr('sync_your_data'),
-                                                    style: const TextStyle(
-                                                      color: Color(0xFF2D9CDB),
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  const Icon(
-                                                    Icons.arrow_forward_ios,
-                                                    color: Color(0xFF2D9CDB),
-                                                    size: 12,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                            Icons.location_on_outlined,
-                                            color: Color(0xFFE0E0E0),
-                                            size: 28),
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (context) => const LocationsScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                            Icons.notifications_outlined,
-                                            color: Color(0xFFE0E0E0),
-                                            size: 28),
-                                        onPressed: () async {
-                                          // Test notification
-                                          await NotificationService()
-                                              .scheduleTestNotification();
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                    'Test notification scheduled for 5 seconds from now'),
-                                                duration: Duration(seconds: 2),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      Consumer<AuthProvider>(
-                                        builder: (context, authProvider, _) {
-                                          return IconButton(
-                                            icon: Icon(
-                                              authProvider.isAuthenticated 
-                                                  ? Icons.account_circle 
-                                                  : Icons.account_circle_outlined,
-                                              color: authProvider.isAuthenticated
-                                                  ? const Color(0xFF9B51E0)
-                                                  : const Color(0xFFE0E0E0),
-                                              size: 28,
-                                            ),
-                                            onPressed: () {
-                                              if (authProvider.isAuthenticated) {
-                                                // Go to account screen
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                    builder: (context) => const AccountScreen(),
-                                                  ),
-                                                );
-                                              } else {
-                                                // Go to login screen
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                    builder: (context) => const LoginScreen(),
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Date
-                            Text(
-                              '${context.tr('today')}, $currentDate',
-                              style: const TextStyle(
-                                color: Color(0xFFE0E0E0),
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
+                      // Header (extracted)
+                      HomeHeader(
+                        greeting: greeting,
+                        currentDate: currentDate,
+                        onSync: () async {
+                          final syncProvider = context.read<SyncProvider>();
+                          await _performSync(syncProvider);
+                          await context.read<MedicationProvider>().loadMedications();
+                          if (mounted) setState(() {});
+                        },
                       ),
                       // Main Content
                       Padding(
@@ -613,8 +455,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         color: Color(0xFF828282),
                                       ),
                                       const SizedBox(height: 16),
-                                      const Text(
-                                        'No medications yet',
+                                      Text(
+                                        context.tr('no_medications'),
                                         style: TextStyle(
                                           color: Color(0xFF828282),
                                           fontSize: 18,
@@ -622,8 +464,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 8),
-                                      const Text(
-                                        'Tap the + button to add your first medication',
+                                      Text(
+                                        context.tr('tap_to_add_first'),
                                         style: TextStyle(
                                           color: Color(0xFF828282),
                                           fontSize: 14,
@@ -641,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
-                                      'Today',
+                                      context.tr('today_section'),
                                       style: const TextStyle(
                                         color: Color(0xFFE0E0E0),
                                         fontSize: 16,
@@ -662,8 +504,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           width: 1,
                                         ),
                                       ),
-                                      child: const Text(
-                                        'All caught up for today!',
+                                      child: Text(
+                                        context.tr('all_caught_up'),
                                         style: TextStyle(
                                           color: Color(0xFF828282),
                                           fontSize: 14,
@@ -687,7 +529,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
-                                      'Taken Today',
+                                      context.tr('taken_today_section'),
                                       style: const TextStyle(
                                         color: Color(0xFFE0E0E0),
                                         fontSize: 16,
@@ -708,8 +550,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           width: 1,
                                         ),
                                       ),
-                                      child: const Text(
-                                        'Nothing marked as taken yet.',
+                                      child: Text(
+                                        context.tr('nothing_taken_yet'),
                                         style: TextStyle(
                                           color: Color(0xFF828282),
                                           fontSize: 14,
@@ -741,7 +583,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          'Scheduled',
+                                          context.tr('scheduled_section'),
                                           style: const TextStyle(
                                             color: Color(0xFFE0E0E0),
                                             fontSize: 16,
@@ -771,8 +613,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           width: 1,
                                         ),
                                       ),
-                                      child: const Text(
-                                        'No scheduled doses.',
+                                      child: Text(
+                                        context.tr('no_scheduled_doses'),
                                         style: TextStyle(
                                           color: Color(0xFF828282),
                                           fontSize: 14,
@@ -839,8 +681,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           width: 1,
                                         ),
                                       ),
-                                      child: const Text(
-                                        'No missed doses.',
+                                      child: Text(
+                                        context.tr('no_missed_doses'),
                                         style: TextStyle(
                                           color: Color(0xFF828282),
                                           fontSize: 14,
@@ -944,7 +786,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             final takenToday = provider.todayDoseCounts[medication.id] ?? 0;
                             final remaining = medication.pillCount! - takenToday;
                             return Text(
-                              'Pills remaining: $remaining/${medication.pillCount}',
+                              context.tr('pills_remaining', {
+                                'remaining': remaining.toString(),
+                                'total': medication.pillCount.toString(),
+                              }),
                               style: TextStyle(
                                 color: remaining <= 0 
                                     ? const Color(0xFF2D9CDB)
@@ -1039,10 +884,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 label: Text(
                   takenToday
-                      ? 'Taken today'
+                      ? context.tr('taken_today_label')
                       : dueToday
                           ? context.tr('mark_as_taken')
-                          : 'Not due today',
+                          : context.tr('not_due_today'),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -1059,19 +904,24 @@ class _HomeScreenState extends State<HomeScreen> {
   String _getScheduleText(Medication medication) {
     switch (medication.scheduleType) {
       case ScheduleType.everyHours:
-        return 'Every ${medication.interval} hours';
+        return context.tr('schedule_every_hours', {
+          'hours': (medication.interval ?? 1).toString(),
+        });
       case ScheduleType.fixedHours:
         final times = medication.fixedTimes
                 ?.map((t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}')
                 .join(', ') ??
             '';
-        return 'Daily at $times';
+        return context.tr('schedule_daily_at', {'times': times});
       case ScheduleType.everyDays:
         final times = medication.fixedTimes
                 ?.map((t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}')
                 .join(', ') ??
             '';
-        return 'Every ${medication.interval} days at $times';
+        return context.tr('schedule_every_days_at', {
+          'days': (medication.interval ?? 1).toString(),
+          'times': times,
+        });
     }
   }
 
@@ -1099,95 +949,28 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1E1E1E),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              medication.name,
-              style: const TextStyle(
-                color: Color(0xFFE0E0E0),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Mark as Taken
-            ListTile(
-              leading: const Icon(Icons.check_circle_outline, color: Color(0xFF9B51E0)),
-              title: Text(
-                context.trStatic('mark_as_taken'),
-                style: const TextStyle(color: Color(0xFF9B51E0)),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                provider.recordDoseTaken(medication.id!);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${medication.name} marked as taken'),
-                    backgroundColor: const Color(0xFF9B51E0),
-                  ),
-                );
-              },
-            ),
-            const Divider(color: Color(0xFF2C2C2C), height: 8),
-            // Edit Medication
-            ListTile(
-              leading: const Icon(Icons.edit_outlined, color: Color(0xFF2D9CDB)),
-              title: const Text(
-                'Edit Medication',
-                style: TextStyle(color: Color(0xFF2D9CDB)),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showEditMedicationModal(context, medication, provider);
-              },
-            ),
-            const Divider(color: Color(0xFF2C2C2C), height: 8),
-            // Skip Dose
-            ListTile(
-              leading: const Icon(Icons.skip_next, color: Color(0xFF2D9CDB)),
-              title: Text(
-                context.trStatic('skip_dose'),
-                style: const TextStyle(color: Color(0xFF2D9CDB)),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showSkipDoseDialog(context, medication, scheduledTime: null);
-              },
-            ),
-            const Divider(color: Color(0xFF2C2C2C), height: 8),
-            // Remove Medication
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: Color(0xFFEB5757)),
-              title: Text(
-                context.trStatic('remove_medication'),
-                style: const TextStyle(color: Color(0xFFEB5757)),
-              ),
-              onTap: () {
-                final scaffold = ScaffoldMessenger.of(context);
-                final medName = medication.name;
-                Navigator.pop(context);
-                _showDeleteDialog(
-                  context,
-                  medication.name,
-                  context.trStatic('remove_medication'),
-                  'Remove ${medication.name} and all its scheduled doses?',
-                  () {
-                    provider.deleteMedication(medication.id!);
-                    scaffold.showSnackBar(
-                      SnackBar(
-                        content: Text('$medName removed'),
-                        backgroundColor: const Color(0xFFEB5757),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
+      builder: (context) => MedicationOptionsSheet(
+        medication: medication,
+        onEdit: () => _showEditMedicationModal(context, medication, provider),
+        onRemove: () {
+          final scaffold = ScaffoldMessenger.of(context);
+          final medName = medication.name;
+          _showDeleteDialog(
+            context,
+            medication.name,
+            context.trStatic('remove_medication'),
+            'Remove ${medication.name} and all its scheduled doses?',
+            () {
+              provider.deleteMedication(medication.id!);
+              scaffold.showSnackBar(
+                SnackBar(
+                  content: Text('$medName removed'),
+                  backgroundColor: const Color(0xFFEB5757),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -1357,103 +1140,29 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1E1E1E),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              dose.medication.name,
-              style: const TextStyle(
-                color: Color(0xFFE0E0E0),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              dose.formatDateTime(),
-              style: const TextStyle(
-                color: Color(0xFF828282),
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Mark as Taken
-            ListTile(
-              leading: const Icon(Icons.check_circle_outline, color: Color(0xFF9B51E0)),
-              title: Text(
-                context.trStatic('mark_as_taken'),
-                style: const TextStyle(color: Color(0xFF9B51E0)),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                provider.recordDoseTaken(dose.medication.id!);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${dose.medication.name} marked as taken'),
-                    backgroundColor: const Color(0xFF9B51E0),
-                  ),
-                );
-              },
-            ),
-            const Divider(color: Color(0xFF2C2C2C), height: 8),
-            // Edit Medication
-            ListTile(
-              leading: const Icon(Icons.edit_outlined, color: Color(0xFF2D9CDB)),
-              title: const Text(
-                'Edit Medication',
-                style: TextStyle(color: Color(0xFF2D9CDB)),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showEditMedicationModal(context, dose.medication, provider);
-              },
-            ),
-            const Divider(color: Color(0xFF2C2C2C), height: 8),
-            // Skip Dose
-            ListTile(
-              leading: const Icon(Icons.skip_next, color: Color(0xFF2D9CDB)),
-              title: Text(
-                context.trStatic('skip_dose'),
-                style: const TextStyle(color: Color(0xFF2D9CDB)),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showSkipDoseDialog(context, dose.medication, scheduledTime: dose.scheduledTime);
-              },
-            ),
-            const Divider(color: Color(0xFF2C2C2C), height: 8),
-            // Remove Medication
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: Color(0xFFEB5757)),
-              title: Text(
-                context.trStatic('remove_medication'),
-                style: const TextStyle(color: Color(0xFFEB5757)),
-              ),
-              onTap: () {
-                final scaffold = ScaffoldMessenger.of(context);
-                final medName = dose.medication.name;
-                Navigator.pop(context);
-                _showDeleteDialog(
-                  context,
-                  dose.medication.name,
-                  context.trStatic('remove_medication'),
-                  'Remove ${dose.medication.name} and all its scheduled doses?',
-                  () {
-                    provider.deleteMedication(dose.medication.id!);
-                    scaffold.showSnackBar(
-                      SnackBar(
-                        content: Text('$medName removed'),
-                        backgroundColor: const Color(0xFFEB5757),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
+      builder: (context) => ScheduledDoseOptionsSheet(
+        dose: dose,
+        onEditMedication: () => _showEditMedicationModal(context, dose.medication, provider),
+        onRemoveMedication: () {
+          final scaffold = ScaffoldMessenger.of(context);
+          final medName = dose.medication.name;
+          _showDeleteDialog(
+            context,
+            dose.medication.name,
+            context.trStatic('remove_medication'),
+            'Remove ${dose.medication.name} and all its scheduled doses?',
+            () {
+              provider.deleteMedication(dose.medication.id!);
+              scaffold.showSnackBar(
+                SnackBar(
+                  content: Text('$medName removed'),
+                  backgroundColor: const Color(0xFFEB5757),
+                ),
+              );
+            },
+          );
+        },
+        onSkipDose: () => _showSkipDoseDialog(context, dose.medication, scheduledTime: dose.scheduledTime),
       ),
     );
   }
