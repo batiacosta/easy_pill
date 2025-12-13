@@ -57,6 +57,18 @@ flutter build ios      # iOS (on macOS with signing set up)
 - Notifications rely on scheduling per medication; ensure device-level permissions are granted.
 - For Android builds, AGP 8.9.1 + Gradle 8.11.1 are configured; Kotlin 2.1.0 is used.
 
-## UML (optional)
-- Source: `assets/architecture.puml`
-- Render (if PlantUML installed): `plantuml assets/architecture.puml -o assets`
+## Architecture
+
+### UML Diagram
+![EasyPill Architecture Diagram](assets/architecture.png)
+
+**Layers:**
+- **Models**: Core data types (Medication, ScheduledDose, SyncConflict)
+- **Providers**: State management via Provider pattern (Auth, Medication, Sync, Localization)
+- **Services**: Database (SQLite), Notifications, Firebase/Firestore, Location & Maps
+- **Screens**: UI pages (Home, Login, Account, Locations, Sync Conflict)
+- **Widgets**: Reusable components (Forms, Cards, Headers, Sheets)
+- **Utilities**: Colors, Input formatters, Localization helpers
+
+**Diagram Source**: `assets/architecture.puml` (PlantUML)  
+**To Regenerate**: `plantuml -Tpng assets/architecture.puml` (requires PlantUML)

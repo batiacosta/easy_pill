@@ -1,4 +1,5 @@
 @startuml EasyPill Architecture
+!theme plain
 skinparam backgroundColor #1E1E1E
 skinparam classBackgroundColor #2C2C2E
 skinparam classBorderColor #9B51E0
@@ -6,111 +7,318 @@ skinparam classFontColor #E0E0E0
 skinparam arrowColor #9B51E0
 skinparam packageBorderColor #2D9CDB
 skinparam packageFontColor #E0E0E0
+skinparam linetype ortho
 
-package "Models" {
+package "Models" #2C3E50 {
   class Medication {
-    +String id
+    +int? id
     +String name
     +String? dosing
-    +String? description
+    +int? pillCount
     +ScheduleType scheduleType
     +int? interval
     +List<TimeOfDay>? fixedTimes
     +TimeOfDay? startTime
-    +int? pillCount
+    +int notificationId
+    +DateTime createdAt
+    --
+    +toMap(): Map
+    +copyWith(...): Medication
   }
-  class MedicationItem {
-    +String id
-    +String name
-    +int? remaining
+
+  enum ScheduleType {
+    everyHours
+    fixedHours
+    everyDays
   }
+
   class ScheduledDose {
-    +String medicationId
-    +DateTime time
-    +bool taken
+    +Medication medication
+    +DateTime scheduledTime
+    --
+    +formatTime(): String
+    +formatDate(): String
   }
+
+  class MedicationItem {
+    +String name
+    +String time
+    +bool isTaken
+  }
+
   class SyncConflict {
     +String medicationId
     +Medication localMedication
-    +Medication cloudMedication
-    +ConflictResolutionStrategy resolutionStrategy
+    +Medication remoteMedication
+    +ConflictResolutionStrategy? resolutionStrategy
+    --
+    +hasDifferences(): bool
+    +getResolvedMedication(): Medication?
+  }
+
+  enum ConflictResolutionStrategy {
+    merge
+    keepOnline
+    keepLocal
   }
 }
 
-package "Providers" {
+package "Providers (State Management)" #34495E {
   class AuthProvider {
-    +User? user
-    +Future<bool> signIn(email, password)
-    +Future<bool> signUp(email, password, name)
-    +Future<void> signOut()
-    +String? errorMessage
+    -FirebaseAuth? _auth
+    -User? _user
+    -bool _isLoading
+    -String? _errorMessage
+    --
+    +user: User?
+    +isAuthenticated: bool
+    +isFirebaseEnabled: bool
+    --
+    +signUp(email, password, name): Future<bool>
+    +signIn(email, password): Future<bool>
+    +signOut(): Future<void>
+    +deleteAccount(): Future<bool>
+    +resetPassword(email): Future<bool>
   }
+
   class MedicationProvider {
-    +List<Medication> medications
-    +Future<void> refreshMedications()
-    +Future<void> addMedication(medication)
-    +Future<void> updateMedication(medication)
-    +Future<void> removeMedication(id)
+    -DatabaseService _dbService
+    -NotificationService _notificationService
+    -FirestoreService _firestoreService
+    -List<Medication> _medications
+    -Set<String> _skippedDoseKeys
+    -List<String> _takenDoseKeys
+    --
+    +medications: List<Medication>
+    +getTodayDoses(): List<ScheduledDose>
+    +getScheduledDoses(): List<ScheduledDose>
+    +getTakenTodayDoses(): List<ScheduledDose>
+    +getMissedDoses(): List<ScheduledDose>
+    +addMedication(med): Future<Medication>
+    +updateMedication(med): Future<void>
+    +deleteMedication(id): Future<void>
+    +skipDose(id, time): Future<void>
+    +takeDose(id, time): Future<void>
   }
+
   class SyncProvider {
-    +Future<void> triggerSync(List<Medication>)
-    +Future<bool> applyConflictResolutions(List<Medication>)
+    -FirestoreService _firestoreService
+    -Connectivity _connectivity
+    --
+    +syncState: SyncState
+    +conflicts: List<SyncConflict>
+    --
+    +checkInternet(): Future<bool>
+    +performSync(local, userId): Future<bool>
+    +resolveConflict(id, strategy): Future<Medication?>
+    +applyConflictResolutions(meds): Future<bool>
   }
+
+  enum SyncState {
+    idle
+    syncing
+    conflict
+    synced
+    error
+  }
+
   class LocalizationProvider {
-    +Locale locale
-    +String tr(key)
-    +void setLocale(locale)
-    +static supportedLocales
+    -Locale _locale
+    --
+    +locale: Locale
+    +languageCode: String
+    --
+    +tr(key, params?): String
+    +setLocale(locale): void
+    +setLanguageCode(code): void
   }
 }
 
-package "Screens" {
-  class HomeScreen
-  class LoginScreen
-  class SignUpScreen
-  class AccountScreen
-  class LocationsScreen
-  class SyncConflictScreen
+package "Services (Backend/Integration)" #455A64 {
+  class DatabaseService {
+    -Database? _database
+    --
+    +insertMedication(med): Future<int>
+    +getAllMedications(): Future<List<Medication>>
+    +updateMedication(med): Future<int>
+    +deleteMedication(id): Future<int>
+    +saveTakenDose(id, time): Future<void>
+    +skipDose(id, time): Future<void>
+    +getTodayDoseCounts(): Future<Map<int,int>>
+  }
+
+  class NotificationService {
+    -FlutterLocalNotificationsPlugin _notifications
+    --
+    +initialize(): Future<void>
+    +requestPermissions(): Future<bool>
+    +scheduleEveryHours(...): Future<void>
+    +scheduleFixedHours(...): Future<void>
+    +scheduleEveryDays(...): Future<void>
+    +cancelNotification(id): Future<void>
+  }
+
+  class FirestoreService {
+    -FirebaseFirestore _firestore
+    -FirebaseAuth _auth
+    --
+    +uploadMedication(med): Future<void>
+    +uploadAllMedications(meds): Future<void>
+    +downloadMedications(): Future<List<Medication>>
+    +deleteMedication(med): Future<void>
+    +syncDoseHistory(id, history): Future<void>
+  }
+
+  class LocationService {
+    +requestLocationPermission(): Future<bool>
+    +getCurrentLocation(): Future<Position?>
+    +calculateDistance(...): double
+    +getNearbyHealthFacilities(...): Future<List<HealthLocation>>
+  }
+
+  class DirectionsService {
+    +launchDefaultMapsApp(...): Future<void>
+  }
 }
 
-package "Widgets" {
-  class AddMedicationModal
-  class MedicationCard
-  class MedicationSection
-  class CollapsibleMedicationSection
-  class MedicationOptionsSheet
-  class ScheduledDoseOptionsSheet
-  class HomeHeader
-  class ActionButton
+package "Screens (UI Pages)" #5D6D7B {
+  class HomeScreen {
+    -shows: Today's doses
+    -shows: Scheduled (31 days)
+    -shows: Missed doses
+    -actions: Add/Edit/Delete meds
+    -actions: Skip/Take dose
+    -actions: Sync data
+  }
+
+  class LoginScreen {
+    -form: Email/Password
+    -action: Sign in
+    -link: Sign up
+  }
+
+  class SignUpScreen {
+    -form: Email/Password/Name
+    -action: Create account
+  }
+
+  class AccountScreen {
+    -displays: User info
+    -action: Sign out
+    -action: Delete account
+    -action: Password reset
+  }
+
+  class LocationsScreen {
+    -map: OpenStreetMap
+    -displays: Nearby hospitals/pharmacies
+    -action: Open directions
+  }
+
+  class SyncConflictScreen {
+    -displays: Conflicts
+    -action: Resolve per medication
+    -action: Apply resolutions
+  }
 }
 
-package "Utilities" {
-  class AppColors
-  class LocalizationExtension
-  class InputFormatters
+package "Widgets (Reusable Components)" #7F8C8D {
+  class AddMedicationModal {
+    -form: Name, Schedule, Times
+    -validation: Input checks
+  }
+
+  class MedicationCard {
+    -displays: Med name, dosing
+  }
+
+  class MedicationSection {
+    -displays: List of meds
+  }
+
+  class TodayDoseCard {
+    -displays: Dose + time
+  }
+
+  class ScheduledDoseCard {
+    -displays: Future dose
+  }
+
+  class TakenDoseCard {
+    -displays: Completed dose
+  }
+
+  class HomeHeader {
+    -displays: Greeting, date
+  }
+
+  class ActionButton {
+    -styled: Primary/secondary
+  }
 }
 
-AuthProvider --> LocalizationProvider : uses
-LoginScreen --> AuthProvider : reads
-LoginScreen --> LocalizationProvider : tr()
-SignUpScreen --> AuthProvider : reads
-SignUpScreen --> LocalizationProvider : tr()
-AccountScreen --> AuthProvider : reads
-HomeScreen --> MedicationProvider : reads & writes
-HomeScreen --> SyncProvider : triggers sync
-AddMedicationModal --> Medication : creates/edits
-AddMedicationModal --> LocalizationProvider : tr()
-SyncConflictScreen --> SyncConflict : displays
-SyncConflictScreen --> SyncProvider : apply resolutions
-SyncConflictScreen --> MedicationProvider : refresh
-LocationsScreen --> LocalizationProvider : tr()
+package "Utilities" #34495E {
+  class AppColors {
+    +primary: Color
+    +secondary: Color
+    +danger: Color
+    +background: Color
+    +surface: Color
+  }
 
+  class InputFormatters {
+    +email: TextInputFormatter
+  }
+
+  class LocalizationExtension {
+    +tr(context, key): String
+  }
+}
+
+' Relationships
+
+' Providers use Models
 MedicationProvider --> Medication : manages
+MedicationProvider --> ScheduledDose : calculates
 SyncProvider --> Medication : synchronizes
-SyncConflict --> Medication : local/cloud
+SyncProvider --> SyncConflict : detects/resolves
 
-ActionButton ..> AppColors : styling
-Widgets ..> AppColors : styling
-Screens ..> Widgets : compose
+' Providers use Services
+MedicationProvider --> DatabaseService : persist local
+MedicationProvider --> NotificationService : schedule alerts
+MedicationProvider --> FirestoreService : sync cloud
+SyncProvider --> FirestoreService : upload/download
+
+' Screens use Providers
+HomeScreen --> MedicationProvider : read doses & meds
+HomeScreen --> SyncProvider : trigger sync
+HomeScreen --> AuthProvider : check auth
+HomeScreen --> LocalizationProvider : translate
+LoginScreen --> AuthProvider : sign in
+SignUpScreen --> AuthProvider : sign up
+AccountScreen --> AuthProvider : user actions
+LocationsScreen --> LocationService : get location
+LocationsScreen --> LocalizationProvider : translate
+SyncConflictScreen --> SyncProvider : resolve conflicts
+SyncConflictScreen --> MedicationProvider : refresh after sync
+
+' Screens use Widgets
+HomeScreen --> AddMedicationModal : show modal
+HomeScreen --> TodayDoseCard : display today
+HomeScreen --> ScheduledDoseCard : display future
+HomeScreen --> TakenDoseCard : display taken
+HomeScreen --> HomeHeader : display header
+HomeScreen --> MedicationSection : display med list
+
+' Widgets use Models
+AddMedicationModal --> Medication : create/edit
+TodayDoseCard --> ScheduledDose : display
+ScheduledDoseCard --> ScheduledDose : display
+
+' Utilities used everywhere
+AppColors <.. Screens : styling
+AppColors <.. Widgets : styling
+LocalizationExtension <.. Screens : translate
+InputFormatters <.. LoginScreen : validate
 
 @enduml
